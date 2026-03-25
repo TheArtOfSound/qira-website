@@ -1,0 +1,11 @@
+*.docx
+~$*
+*.mp4
+server.js
+node_modules/
+.claude/
+LOLM_TPU_Run_Plan.pdf
+LOLM_Executive_Summary.docx
+next_3_days_checklist_updated.pdf
+Directed_Geometric_Fusion_Theory.pdf
+*.jsonl

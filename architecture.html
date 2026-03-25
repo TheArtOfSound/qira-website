@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%236366f1'/><text x='16' y='22' text-anchor='middle' fill='white' font-family='Arial' font-size='18' font-weight='bold'>Q</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOLM Architecture | Interactive 3D Visualization | QIRA</title>
+    <meta name="description" content="Explore LOLM's hybrid architecture in an interactive 3D diagram. See how the Surface Decoder, Latent SSM, Regime Layer, Gate, and Memory converge in Fusion.">
+    <meta property="og:title" content="LOLM Architecture | Interactive 3D Visualization | QIRA">
+    <meta property="og:description" content="Explore LOLM's hybrid architecture in an interactive 3D diagram. See how the Surface Decoder, Latent SSM, Regime Layer, Gate, and Memory converge in Fusion.">
+    <meta property="og:image" content="qira_logo_full.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="LOLM Architecture | Interactive 3D Visualization | QIRA">
+    <meta name="twitter:description" content="Explore LOLM's hybrid architecture in an interactive 3D diagram. See how the Surface Decoder, Latent SSM, Regime Layer, Gate, and Memory converge in Fusion.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #0a0a0b;
+            color: #e2e8f0;
+            font-family: 'Inter', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+        .anav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(10,10,11,0.92); backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .anav-inner {
+            max-width: 1200px; margin: 0 auto; display: flex;
+            align-items: center; justify-content: space-between;
+            height: 64px; padding: 0 24px;
+        }
+        .anav-logo {
+            display: flex; align-items: center; gap: 10px; text-decoration: none;
+        }
+        .anav-logo-icon {
+            width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+        }
+        .anav-logo-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .anav-logo-text {
+            font-size: 18px; font-weight: 700; color: #fff; letter-spacing: 0.08em;
+        }
+        .anav-back {
+            color: #94a3b8; text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s;
+        }
+        .anav-back:hover { color: #6366f1; }
+
+        .arch-container {
+            max-width: 1200px; margin: 0 auto; padding: 88px 24px 60px;
+        }
+        .arch-header {
+            display: flex; align-items: flex-end; justify-content: space-between;
+            flex-wrap: wrap; gap: 16px; margin-bottom: 16px;
+        }
+        .arch-header-text h1 {
+            font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -0.03em; margin-bottom: 4px;
+        }
+        .arch-header-text p {
+            color: #94a3b8; font-size: 13px; line-height: 1.5;
+        }
+        .arch-controls {
+            display: flex; align-items: center; gap: 14px; flex-shrink: 0;
+        }
+        .arch-controls label {
+            display: flex; align-items: center; gap: 6px; font-size: 12px; color: #94a3b8; font-weight: 500;
+        }
+        .arch-controls input[type="range"] {
+            width: 90px; accent-color: #6366f1;
+        }
+        .gate-val {
+            font-family: 'JetBrains Mono', monospace; font-size: 13px;
+            font-weight: 600; color: #818cf8; min-width: 32px;
+        }
+
+        .canvas-wrap {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px; overflow: hidden; position: relative;
+        }
+        #arch-canvas {
+            width: 100%; display: block; cursor: grab; touch-action: none;
+        }
+        .canvas-hint {
+            position: absolute; bottom: 12px; left: 16px;
+            font-size: 11px; color: rgba(255,255,255,0.25);
+            pointer-events: none;
+        }
+
+        .arch-legend {
+            display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px;
+        }
+        .arch-legend-item {
+            display: flex; align-items: center; gap: 6px; font-size: 11px; color: #94a3b8;
+        }
+        .arch-legend-dot {
+            width: 10px; height: 10px; border-radius: 3px;
+        }
+
+        .arch-info {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 12px; margin-top: 24px;
+        }
+        .arch-info-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px; padding: 16px;
+        }
+        .arch-info-card h3 {
+            font-size: 13px; font-weight: 700; margin-bottom: 6px;
+        }
+        .arch-info-card p {
+            font-size: 12px; color: #94a3b8; line-height: 1.6;
+        }
+        .arch-info-card code {
+            font-family: 'JetBrains Mono', monospace; font-size: 11px;
+            background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 3px;
+        }
+
+        .arch-footer {
+            margin-top: 24px; border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 14px;
+        }
+        .arch-footer p {
+            font-size: 11px; color: #64748b; line-height: 1.5;
+        }
+
+        @media (max-width: 640px) {
+            .arch-header { flex-direction: column; align-items: flex-start; }
+            .arch-info { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="anav">
+        <div class="anav-inner">
+            <a href="index.html" class="anav-logo">
+                <div class="anav-logo-icon"><img src="qira_logo_full.png" alt="QIRA"></div>
+                <span class="anav-logo-text">QIRA</span>
+            </a>
+            <a href="index.html#research" class="anav-back">&larr; Back to Research</a>
+        </div>
+    </nav>
+
+    <div class="arch-container">
+        <div class="arch-header">
+            <div class="arch-header-text">
+                <h1>LOLM Architecture</h1>
+                <p>Interactive 3D visualization of the Latent Order Language Model. Hover components for details.</p>
+            </div>
+            <div class="arch-controls">
+                <label>
+                    Gate (g)
+                    <input type="range" id="gate-slider" min="0" max="100" value="72">
+                    <span class="gate-val" id="gate-display">0.72</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="canvas-wrap">
+            <canvas id="arch-canvas" width="1600" height="1100"></canvas>
+            <div class="canvas-hint">Drag to orbit &middot; Scroll to zoom &middot; Shift+drag to pan</div>
+        </div>
+
+        <div class="arch-legend">
+            <div class="arch-legend-item"><span class="arch-legend-dot" style="background:#3A5FE8;"></span>Surface Decoder</div>
+            <div class="arch-legend-item"><span class="arch-legend-dot" style="background:#C06010;"></span>Latent SSM</div>
+            <div class="arch-legend-item"><span class="arch-legend-dot" style="background:#A02050;"></span>Regime Layer</div>
+            <div class="arch-legend-item"><span class="arch-legend-dot" style="background:#188860;"></span>Persistent Memory</div>
+            <div class="arch-legend-item"><span class="arch-legend-dot" style="background:#7040C0;"></span>Manifestation Gate</div>
+            <div class="arch-legend-item"><span class="arch-legend-dot" style="background:#B8A010;"></span>Fusion Layer</div>
+        </div>
+
+        <div class="arch-info">
+            <div class="arch-info-card">
+                <h3 style="color:#6E8BF5;">Surface Decoder</h3>
+                <p>16 Transformer layers with RoPE, 16 attention heads (<code>d_k=64</code>), <code>d_ff=4096</code> with GELU. Handles fast token level prediction. Output <code>h &isin; (T, 1024)</code>.</p>
+            </div>
+            <div class="arch-info-card">
+                <h3 style="color:#E89040;">Latent SSM</h3>
+                <p>4 selective Mamba layers, <code>d_inner=2048</code>, <code>d_state=32</code>. Captures slow discourse level structure. Trained via CPC loss (InfoNCE). Output <code>z &isin; (T, 1024)</code>.</p>
+            </div>
+            <div class="arch-info-card">
+                <h3 style="color:#D45878;">Regime Layer</h3>
+                <p>32 Gumbel-Softmax codes, <code>d_r=128</code>, <code>&tau;=0.5</code>. Detects discourse transitions. Gradient detached before fusion. Changepoint + diversity losses.</p>
+            </div>
+            <div class="arch-info-card">
+                <h3 style="color:#30C090;">Persistent Memory</h3>
+                <p>3 banks (episodic, semantic, self), 128 slots each, <code>d_s=1024</code>. Chunked read/write (<code>C=4</code>). Gated update per slot. Output <code>m &isin; (T, 1024)</code>.</p>
+            </div>
+            <div class="arch-info-card">
+                <h3 style="color:#A070E8;">Manifestation Gate</h3>
+                <p>Per dimension <code>g &isin; [0,1]^1024</code>. 2-layer MLP conditioned on h, z, m, r. Learns contextual surface/latent blend per token position.</p>
+            </div>
+            <div class="arch-info-card">
+                <h3 style="color:#E0D040;">Fusion Layer</h3>
+                <p><code>g&odot;LN(W_h &middot; h) + (1-g)&odot;LN(W_z &middot; z) + W_m &middot; m + W_r &middot; r&#772;</code>. Per dimension gated blend plus additive memory and regime contributions.</p>
+            </div>
+        </div>
+
+        <div class="arch-footer">
+            <p>This visualization represents the high level component topology of LOLM. Internal wiring details, loss functions, and training procedures are described in the paper. The gate slider adjusts the surface/latent blend ratio in real time.</p>
+            <p style="margin-top:6px;">Qira LLC, Leonard & Leonard, 2026</p>
+            <p style="margin-top:6px;">&copy; 2026 QIRA. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const cv = document.getElementById('arch-canvas');
+        const cx = cv.getContext('2d');
+        const W = cv.width, H = cv.height;
+        const gateSlider = document.getElementById('gate-slider');
+        const gateDisplay = document.getElementById('gate-display');
+
+        let gateVal = 71;
+        gateSlider.addEventListener('input', function() {
+            gateVal = +this.value;
+            gateDisplay.textContent = (gateVal / 100).toFixed(2);
+        });
+
+        const S = {
+            rotY: -18, rotX: 20, zoom: 0.92, panX: 0, panY: 0,
+            dragging: false, lastMX: 0, lastMY: 0, TK: 0,
+            lastInteract: 0, mouseX: -1, mouseY: -1, hoveredId: '',
+            PP: [], hitZones: [],
+            ambient: Array.from({ length: 80 }, function() {
+                return {
+                    x: (Math.random() - .5) * 1400, y: (Math.random() - .5) * 1200,
+                    z: (Math.random() - .5) * 800, vx: (Math.random() - .5) * .15,
+                    vy: (Math.random() - .5) * .1, sz: Math.random() * 1.5 + .5,
+                    a: Math.random() * .3 + .05
+                };
+            })
+        };
+
+        const COL = {
+            surf: ['#3A5FE8', '#6E8BF5', '#A0B8FF'], ssm: ['#C06010', '#E89040', '#FFB86C'],
+            reg: ['#A02050', '#D45878', '#F8A0B8'], mem: ['#188860', '#30C090', '#70E8C0'],
+            gate: ['#7040C0', '#A070E8', '#C8A8F8'], fuse: ['#B8A010', '#E0D040', '#F8F080'],
+            tok: ['#404048', '#606068', '#808088'], head: ['#505058', '#707078', '#909098'],
+        };
+
+        const INFO = {
+            tok: { name: 'Token embeddings', lines: ['Input sequence x = (x\u2081, ..., x_T)', 'Shape: (T, 1024)', '50,257 vocabulary via BPE'] },
+            surf: { name: 'Surface decoder', lines: ['16 Transformer layers + RoPE', '16 attention heads, d_k = 64', 'd_ff = 4096, GELU activation', 'Output h \u2192 (T, 1024)'] },
+            ssm: { name: 'Latent SSM', lines: ['4 selective Mamba layers', 'd_inner = 2048, d_state = 32', 'Recurrent state s \u2208 \u211D^(2048\u00d732)', 'Trained by CPC loss (InfoNCE)', 'Output z \u2192 (T, 1024)'] },
+            reg: { name: 'Regime layer', lines: ['32 Gumbel-Softmax codes', 'd_r = 128, \u03c4 = 0.5', 'Gradient detached before fusion', 'Changepoint + diversity losses', 'Output r\u0304 \u2192 (T, 128)'] },
+            gate: { name: 'Manifestation gate', lines: ['Per dimension g \u2208 [0,1]^1024', '2-layer MLP, sees h, z, m, r', 'Learns contextual surface/latent blend', 'Output g \u2192 (T, 1024)'] },
+            mem: { name: 'Persistent memory', lines: ['3 banks: episodic, semantic, self', '128 slots per bank, d_s = 1024', 'Chunked read/write (C=4)', 'Gated update per slot', 'Output m \u2192 (T, 1024)'] },
+            fuse: { name: 'Fusion layer', lines: ['g\u2299LN(W\u2095h) + (1\u2212g)\u2299LN(W\u1d64z)', '+ W\u2098m + W\u1d63r\u0304', 'Per dim gated blend + additive', 'Output \u2192 (T, 1024)'] },
+            head: { name: 'LM head', lines: ['Weight-tied with embedding', '\u2113 = W_E\u1d40 \u00b7 o', 'Output \u2192 (T, 50257)'] },
+        };
+
+        function pr(x, y, z) {
+            var ry = S.rotY * Math.PI / 180, rx = S.rotX * Math.PI / 180;
+            var cr = Math.cos(ry), sr = Math.sin(ry), ct = Math.cos(rx), st = Math.sin(rx);
+            var px = x * cr - z * sr, pz = x * sr + z * cr, py = y * ct - pz * st, pz2 = y * st + pz * ct;
+            var f = 950 / (950 + pz2);
+            return { x: W / 2 + S.panX + px * f * S.zoom, y: H / 2 + S.panY + py * f * S.zoom, s: f * S.zoom, z: pz2 };
+        }
+
+        function drawSlab(x, y, z, w, h, d, cols, alpha, glow, id) {
+            alpha = alpha || .92;
+            var hov = id && S.hoveredId === id;
+            var aa = hov ? Math.min(1, alpha * 1.4) : alpha;
+            var c = [pr(x-w/2,y-h/2,z-d/2),pr(x+w/2,y-h/2,z-d/2),pr(x+w/2,y+h/2,z-d/2),pr(x-w/2,y+h/2,z-d/2),pr(x-w/2,y-h/2,z+d/2),pr(x+w/2,y-h/2,z+d/2),pr(x+w/2,y+h/2,z+d/2),pr(x-w/2,y+h/2,z+d/2)];
+            var faces=[{p:[c[4],c[5],c[6],c[7]],ci:2},{p:[c[0],c[1],c[5],c[4]],ci:2},{p:[c[1],c[2],c[6],c[5]],ci:0},{p:[c[0],c[3],c[7],c[4]],ci:1},{p:[c[2],c[3],c[7],c[6]],ci:0}];
+            faces.sort(function(a,b){return(b.p.reduce(function(s,p){return s+p.z},0)-a.p.reduce(function(s,p){return s+p.z},0))/4});
+            if(glow||hov){var gc=pr(x,y,z);cx.save();cx.globalAlpha=hov?.2:.1;var gr=cx.createRadialGradient(gc.x,gc.y,0,gc.x,gc.y,Math.max(w,d)*gc.s*(hov?.9:.7));gr.addColorStop(0,cols[2]);gr.addColorStop(1,'transparent');cx.fillStyle=gr;cx.fillRect(gc.x-280,gc.y-280,560,560);cx.restore()}
+            for(var fi=0;fi<faces.length;fi++){var f=faces[fi];cx.beginPath();cx.moveTo(f.p[0].x,f.p[0].y);for(var i=1;i<4;i++)cx.lineTo(f.p[i].x,f.p[i].y);cx.closePath();var grd=cx.createLinearGradient(f.p[0].x,f.p[0].y,f.p[2].x,f.p[2].y);grd.addColorStop(0,cols[f.ci]);grd.addColorStop(1,cols[Math.max(0,f.ci-1)]);cx.globalAlpha=aa;cx.fillStyle=grd;cx.fill();cx.globalAlpha=aa*(hov?.5:.3);cx.strokeStyle=cols[2];cx.lineWidth=hov?1.2:.8;cx.stroke();cx.globalAlpha=1}
+            if(id){var mn=c.reduce(function(a,p){return{x:Math.min(a.x,p.x),y:Math.min(a.y,p.y)}},{x:9999,y:9999});var mx2=c.reduce(function(a,p){return{x:Math.max(a.x,p.x),y:Math.max(a.y,p.y)}},{x:-9999,y:-9999});S.hitZones.push({id:id,x:mn.x-10,y:mn.y-10,w:mx2.x-mn.x+20,h:mx2.y-mn.y+20})}
+        }
+
+        function smallLabel(x3d,y3d,z3d,text,col){var p=pr(x3d,y3d,z3d);var fs=Math.max(9,Math.round(11*p.s));cx.font='500 '+fs+'px system-ui,sans-serif';cx.fillStyle=col;cx.textAlign='center';cx.globalAlpha=.75;cx.fillText(text,p.x,p.y);cx.globalAlpha=1}
+
+        function tooltip(info,anchorX,anchorY,accent){
+            var fs=13,fsSm=11,maxW=0;
+            cx.font='500 '+fs+'px system-ui,sans-serif';maxW=Math.max(maxW,cx.measureText(info.name).width);
+            cx.font='400 '+fsSm+'px system-ui,sans-serif';
+            for(var i=0;i<info.lines.length;i++)maxW=Math.max(maxW,cx.measureText(info.lines[i]).width);
+            var px2=12,py2=10,bw=maxW+px2*2,bh=py2*2+fs+4+info.lines.length*(fsSm+3);
+            var tx=anchorX+15,ty=anchorY-bh/2;
+            if(tx+bw>W-20)tx=anchorX-bw-15;if(ty<10)ty=10;if(ty+bh>H-10)ty=H-10-bh;
+            cx.save();
+            cx.globalAlpha=.06;cx.fillStyle=accent;
+            var r=8;cx.beginPath();cx.moveTo(tx+r+2,ty+2);cx.lineTo(tx+bw-r+2,ty+2);cx.quadraticCurveTo(tx+bw+2,ty+2,tx+bw+2,ty+r+2);cx.lineTo(tx+bw+2,ty+bh-r+2);cx.quadraticCurveTo(tx+bw+2,ty+bh+2,tx+bw-r+2,ty+bh+2);cx.lineTo(tx+r+2,ty+bh+2);cx.quadraticCurveTo(tx+2,ty+bh+2,tx+2,ty+bh-r+2);cx.lineTo(tx+2,ty+r+2);cx.quadraticCurveTo(tx+2,ty+2,tx+r+2,ty+2);cx.closePath();cx.fill();
+            cx.globalAlpha=.92;cx.fillStyle='#0c0e1a';
+            cx.beginPath();cx.moveTo(tx+r,ty);cx.lineTo(tx+bw-r,ty);cx.quadraticCurveTo(tx+bw,ty,tx+bw,ty+r);cx.lineTo(tx+bw,ty+bh-r);cx.quadraticCurveTo(tx+bw,ty+bh,tx+bw-r,ty+bh);cx.lineTo(tx+r,ty+bh);cx.quadraticCurveTo(tx,ty+bh,tx,ty+bh-r);cx.lineTo(tx,ty+r);cx.quadraticCurveTo(tx,ty,tx+r,ty);cx.closePath();cx.fill();
+            cx.globalAlpha=.6;cx.strokeStyle=accent;cx.lineWidth=1;cx.stroke();cx.restore();
+            cx.save();cx.globalAlpha=.15;cx.fillStyle=accent;cx.fillRect(tx,ty,bw,3);cx.restore();
+            var cy2=ty+py2+fs;
+            cx.font='500 '+fs+'px system-ui,sans-serif';cx.fillStyle=accent;cx.textAlign='left';cx.globalAlpha=1;cx.fillText(info.name,tx+px2,cy2);cy2+=6;
+            cx.font='400 '+fsSm+'px system-ui,sans-serif';cx.fillStyle='#b0b0a8';
+            for(var i=0;i<info.lines.length;i++){cy2+=fsSm+3;cx.fillText(info.lines[i],tx+px2,cy2)}
+            cx.globalAlpha=1;
+        }
+
+        function beam(x1,y1,z1,x2,y2,z2,col,w,dash,gl){
+            var a=pr(x1,y1,z1),b=pr(x2,y2,z2);
+            if(gl){cx.save();cx.globalAlpha=.08;cx.strokeStyle=gl;cx.lineWidth=(w||1.5)*3;cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.stroke();cx.restore()}
+            cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.strokeStyle=col;cx.lineWidth=w||1.5;
+            if(dash)cx.setLineDash([5,5]);else cx.setLineDash([]);cx.globalAlpha=.7;cx.stroke();cx.setLineDash([]);cx.globalAlpha=1;
+            var dx=b.x-a.x,dy=b.y-a.y,l=Math.sqrt(dx*dx+dy*dy);if(l<6)return;
+            var ux=dx/l,uy=dy/l;
+            cx.beginPath();cx.moveTo(b.x,b.y);cx.lineTo(b.x-ux*8+uy*3.5,b.y-uy*8-ux*3.5);cx.lineTo(b.x-ux*8-uy*3.5,b.y-uy*8+ux*3.5);cx.closePath();cx.fillStyle=col;cx.globalAlpha=.8;cx.fill();cx.globalAlpha=1;
+        }
+
+        function spawnP(a,b,c,d,e,f,col,sp){S.PP.push({x1:a,y1:b,z1:c,x2:d,y2:e,z2:f,col:col,t:0,sp:sp||.012,trail:[]})}
+
+        function drawPP(){
+            for(var i=S.PP.length-1;i>=0;i--){
+                var p=S.PP[i];p.t+=p.sp;if(p.t>1){S.PP.splice(i,1);continue}
+                var px2=p.x1+(p.x2-p.x1)*p.t,py2=p.y1+(p.y2-p.y1)*p.t,pz=p.z1+(p.z2-p.z1)*p.t;
+                var pt=pr(px2,py2,pz);
+                p.trail.push({x:pt.x,y:pt.y});if(p.trail.length>12)p.trail.shift();
+                if(p.trail.length>1){cx.save();for(var j=0;j<p.trail.length-1;j++){var a2=j/p.trail.length;cx.globalAlpha=a2*.3*(1-p.t*.2);cx.strokeStyle=p.col;cx.lineWidth=Math.max(1,3*pt.s*a2);cx.beginPath();cx.moveTo(p.trail[j].x,p.trail[j].y);cx.lineTo(p.trail[j+1].x,p.trail[j+1].y);cx.stroke()}cx.restore()}
+                var sz=Math.max(2,4.5*pt.s);
+                cx.save();cx.globalAlpha=.08;cx.beginPath();cx.arc(pt.x,pt.y,sz*3,0,Math.PI*2);cx.fillStyle=p.col;cx.fill();
+                cx.globalAlpha=.8*(1-p.t*.25);cx.beginPath();cx.arc(pt.x,pt.y,sz,0,Math.PI*2);cx.fillStyle=p.col;cx.fill();
+                cx.globalAlpha=.55;cx.beginPath();cx.arc(pt.x,pt.y,sz*.3,0,Math.PI*2);cx.fillStyle='#fff';cx.fill();cx.restore();
+            }
+        }
+
+        function drawAmbient(){
+            cx.save();
+            for(var i=0;i<S.ambient.length;i++){
+                var a=S.ambient[i];a.x+=a.vx;a.y+=a.vy;
+                if(a.x>700)a.x=-700;if(a.x<-700)a.x=700;if(a.y>600)a.y=-600;if(a.y<-600)a.y=600;
+                var p=pr(a.x,a.y,a.z);
+                cx.globalAlpha=a.a*.6;cx.fillStyle='#6668a0';
+                cx.beginPath();cx.arc(p.x,p.y,a.sz*p.s,0,Math.PI*2);cx.fill();
+            }
+            cx.restore();
+        }
+
+        function draw(){
+            var gv=gateVal/100;
+            if(!S.dragging&&S.TK-S.lastInteract>2700)S.rotY+=.12;
+            S.hitZones.length=0;
+            cx.clearRect(0,0,W,H);
+            var bg=cx.createRadialGradient(W/2,H/2,50,W/2,H/2,950);
+            bg.addColorStop(0,'#10142a');bg.addColorStop(.6,'#0a0c18');bg.addColorStop(1,'#060810');
+            cx.fillStyle=bg;cx.fillRect(0,0,W,H);
+            drawAmbient();
+            var cp=pr(0,420,0);
+            cx.save();cx.globalAlpha=.06;
+            var sg=cx.createRadialGradient(cp.x,cp.y,0,cp.x,cp.y,350*S.zoom);
+            sg.addColorStop(0,'#4040a0');sg.addColorStop(1,'transparent');
+            cx.fillStyle=sg;cx.fillRect(cp.x-400,cp.y-100,800,200);cx.restore();
+
+            var TY=340,DY=175,SY2=-65,FY=-205,HY=-320;
+            var sx=-260,rx=-90,gx=90,mx=260;
+
+            drawSlab(0,TY,0,300,16,130,COL.tok,.7,false,'tok');
+            smallLabel(0,TY-18,0,'Tokens',COL.tok[2]);
+
+            for(var i=15;i>=0;i--)drawSlab(0,DY+44-i*5.6,0,270,3.5,120,COL.surf,.2+i*.04);
+            drawSlab(0,DY,0,275,95,125,COL.surf,.05,true,'surf');
+            for(var i=0;i<16;i++)drawSlab(-112+i*14.8,DY+14,0,11,7,10,COL.surf,.4);
+            smallLabel(0,DY-55,0,'Decoder',COL.surf[2]);
+
+            for(var i=0;i<4;i++)drawSlab(sx,SY2+24-i*17,0,140,12,90,COL.ssm,.48+i*.08);
+            drawSlab(sx,SY2,0,146,75,96,COL.ssm,.04,true,'ssm');
+            for(var r=0;r<3;r++)for(var c=0;c<6;c++)drawSlab(sx-32+c*11,SY2+48+r*8,0,8,5,8,COL.ssm,.28);
+            smallLabel(sx,SY2-48,0,'SSM',COL.ssm[2]);
+
+            for(var r=0;r<4;r++)for(var c=0;c<8;c++)drawSlab(rx-42+c*11,SY2-20+r*11,0,8,8,8,COL.reg,.5);
+            drawSlab(rx,SY2-4,0,125,58,60,COL.reg,.04,true,'reg');
+            smallLabel(rx,SY2-42,0,'Regime',COL.reg[2]);
+
+            for(var i=0;i<48;i++){
+                var v=.35+.35*Math.sin(i*.18+S.TK*.025)+.15*Math.cos(i*.35);
+                var r1='rgb('+Math.round(90+165*v)+','+Math.round(110+80*v)+','+Math.round(200+55*(1-v))+')';
+                var r2='rgb('+Math.round(200+55*v)+','+Math.round(120+30*v)+','+Math.round(40+50*(1-v))+')';
+                var col=v>.5?[r1,r1,r1]:[r2,r2,r2];drawSlab(gx-35+i*1.5,SY2,0,1.2,28,1.2,col,.6);
+            }
+            drawSlab(gx,SY2,0,100,34,30,COL.gate,.04,true,'gate');
+            smallLabel(gx,SY2-26,0,'Gate',COL.gate[2]);
+
+            var bk=[COL.mem,['#15805A','#28B080','#60D8B0'],['#108048','#20A068','#50C898']];
+            for(var b=0;b<3;b++){var bz=-28+b*20;for(var r=0;r<3;r++)for(var c=0;c<6;c++)drawSlab(mx-32+c*11,SY2-12+r*9,bz,8,6,7,bk[b],.32)}
+            drawSlab(mx,SY2-2,0,125,50,80,COL.mem,.04,true,'mem');
+            smallLabel(mx,SY2-36,0,'Memory',COL.mem[2]);
+
+            var sw=Math.round(210*gv),lw=210-sw;
+            drawSlab(lw/2-sw/2,FY,0,Math.max(sw,6),18,110,COL.surf,.5);
+            drawSlab(-lw/2+sw/2,FY,0,Math.max(lw,6),18,110,COL.ssm,.5);
+            drawSlab(115,FY,0,14,18,110,COL.mem,.4);drawSlab(-115,FY,0,14,18,110,COL.reg,.4);
+            drawSlab(0,FY,0,270,22,115,COL.fuse,.05,true,'fuse');
+            smallLabel(0,FY-20,0,'Fusion',COL.fuse[2]);
+
+            drawSlab(0,HY,0,230,18,95,COL.head,.5,false,'head');
+            smallLabel(0,HY-18,0,'LM Head',COL.head[2]);
+
+            beam(0,TY-10,0,0,DY+50,0,COL.surf[1],1.5,false,COL.surf[2]);
+            beam(-45,DY-50,0,sx+74,SY2+40,0,COL.ssm[1],1,false,COL.ssm[2]);
+            beam(-18,DY-50,0,rx+64,SY2+32,0,COL.reg[1],1,false,COL.reg[2]);
+            beam(18,DY-50,0,gx-52,SY2+20,0,COL.gate[1],1,false,COL.gate[2]);
+            beam(45,DY-50,0,mx-64,SY2+28,0,COL.mem[1],1,false,COL.mem[2]);
+            beam(sx,SY2-42,0,-65,FY+14,0,COL.ssm[1],1,false,COL.ssm[2]);
+            beam(rx,SY2-34,0,-35,FY+14,0,COL.reg[1],.8,true);
+            beam(gx,SY2-20,0,35,FY+14,0,COL.gate[1],1,false,COL.gate[2]);
+            beam(mx,SY2-28,0,65,FY+14,0,COL.mem[1],1,false,COL.mem[2]);
+            beam(0,FY-14,0,0,HY+12,0,COL.fuse[1],1.5,false,COL.fuse[2]);
+
+            drawPP();
+
+            if(S.hoveredId&&INFO[S.hoveredId]){
+                var hz=null;for(var i=0;i<S.hitZones.length;i++){if(S.hitZones[i].id===S.hoveredId){hz=S.hitZones[i];break}}
+                if(hz){
+                    var accentMap={surf:COL.surf[1],ssm:COL.ssm[1],reg:COL.reg[1],gate:COL.gate[1],mem:COL.mem[1],fuse:COL.fuse[1],head:COL.head[2],tok:COL.tok[2]};
+                    var inf={name:INFO[S.hoveredId].name,lines:INFO[S.hoveredId].lines.slice()};
+                    if(S.hoveredId==='fuse')inf.lines.push(Math.round(gv*100)+'% surface / '+Math.round((1-gv)*100)+'% latent');
+                    tooltip(inf,hz.x+hz.w,hz.y+hz.h/2,accentMap[S.hoveredId]);
+                }
+            }
+        }
+
+        function loop(){
+            S.TK++;
+            if(S.TK%14===0)spawnP(0,340,0,0,225,0,COL.surf[2],.016);
+            if(S.TK%24===0){spawnP(-45,125,0,-260,-25,0,COL.ssm[2],.013);spawnP(-18,125,0,-90,-25,0,COL.reg[2],.013);spawnP(18,125,0,90,-25,0,COL.gate[2],.013);spawnP(45,125,0,260,-25,0,COL.mem[2],.013)}
+            if(S.TK%32===0){spawnP(-260,-107,0,-65,-190,0,COL.ssm[2],.012);spawnP(90,-85,0,35,-190,0,COL.gate[2],.012);spawnP(260,-40,0,65,-190,0,COL.mem[2],.012)}
+            if(S.TK%40===0)spawnP(0,-219,0,0,-308,0,COL.fuse[2],.015);
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        cv.addEventListener('pointerdown',function(e){S.dragging=true;S.lastMX=e.clientX;S.lastMY=e.clientY;cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';S.lastInteract=S.TK});
+        cv.addEventListener('pointermove',function(e){
+            var rect=cv.getBoundingClientRect();S.mouseX=(e.clientX-rect.left)*(W/rect.width);S.mouseY=(e.clientY-rect.top)*(H/rect.height);
+            if(!S.dragging){S.hoveredId='';for(var i=0;i<S.hitZones.length;i++){var hz=S.hitZones[i];if(S.mouseX>=hz.x&&S.mouseX<=hz.x+hz.w&&S.mouseY>=hz.y&&S.mouseY<=hz.y+hz.h){S.hoveredId=hz.id;break}}cv.style.cursor=S.hoveredId?'pointer':'grab';return}
+            var dx=e.clientX-S.lastMX,dy=e.clientY-S.lastMY;
+            if(e.shiftKey){S.panX+=dx*1.5;S.panY+=dy*1.5}else{S.rotY+=dx*.35;S.rotX-=dy*.35;S.rotX=Math.max(-60,Math.min(60,S.rotX));S.rotY=Math.max(-80,Math.min(80,S.rotY))}
+            S.lastMX=e.clientX;S.lastMY=e.clientY;S.lastInteract=S.TK;
+        });
+        cv.addEventListener('pointerup',function(){S.dragging=false;cv.style.cursor='grab'});
+        cv.addEventListener('pointerleave',function(){S.mouseX=-1;S.mouseY=-1;S.hoveredId=''});
+        cv.addEventListener('wheel',function(e){e.preventDefault();S.zoom*=e.deltaY>0?.96:1.04;S.zoom=Math.max(.4,Math.min(2,S.zoom));S.lastInteract=S.TK},{passive:false});
+
+        requestAnimationFrame(loop);
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%236366f1'/><text x='16' y='22' text-anchor='middle' fill='white' font-family='Arial' font-size='18' font-weight='bold'>Q</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QIRA | Advancing the Next Generation of AI Systems</title>
+    <meta name="description" content="QIRA is an independent AI research lab developing hybrid Transformer SSM architectures. Our LOLM framework separates surface prediction from latent discourse modeling.">
+    <meta property="og:title" content="QIRA | Advancing the Next Generation of AI Systems">
+    <meta property="og:description" content="QIRA is an independent AI research lab developing hybrid Transformer SSM architectures. Our LOLM framework separates surface prediction from latent discourse modeling.">
+    <meta property="og:image" content="qira_logo_full.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="QIRA | Advancing the Next Generation of AI Systems">
+    <meta name="twitter:description" content="QIRA is an independent AI research lab developing hybrid Transformer SSM architectures. Our LOLM framework separates surface prediction from latent discourse modeling.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="scroll-progress" id="scroll-progress"></div>
+    <div class="cursor-glow" id="cursor-glow"></div>
+
+    <!-- Navigation -->
+    <nav class="nav" id="nav">
+        <div class="nav-inner">
+            <a href="#home" class="nav-logo"><div class="nav-logo-icon"><img src="qira_logo_full.png" alt="QIRA"></div><span class="nav-logo-text">QIRA</span></a>
+            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="#about">About</a></li>
+                <li><a href="#research">Research</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#infrastructure">Infrastructure</a></li>
+                <li><a href="#blog">Blog</a></li>
+                <li><a href="#team">Team</a></li>
+                <li><a href="#contact" class="nav-cta">Contact</a></li>
+            </ul>
+            <div class="nav-backdrop" id="nav-backdrop"></div>
+        </div>
+    </nav>
+
+    <!-- 1. Homepage / Hero -->
+    <section class="hero" id="home">
+        <div class="hero-bg">
+            <canvas id="hero-canvas"></canvas>
+        </div>
+        <div class="container hero-content">
+            <p class="hero-tag">Independent AI Research Lab</p>
+            <h1 class="hero-title">Language has hidden structure.<br>We're building models that see it.</h1>
+            <p class="hero-sub">QIRA is an independent research lab developing hybrid Transformer SSM architectures that separate surface level prediction from latent discourse modeling. Our first framework, LOLM (Latent Order Language Model), scales from 20.5M to 1.57B parameters with open code and weights.</p>
+            <div class="hero-actions">
+                <a href="#research" class="btn btn-primary">Explore Our Research</a>
+                <a href="#about" class="btn btn-secondary">Learn More</a>
+            </div>
+        </div>
+        <div class="hero-scroll">
+            <span>Scroll to explore</span>
+            <div class="scroll-line"></div>
+        </div>
+    </section>
+
+    <!-- Homepage Intro Section -->
+    <section class="section section-intro">
+        <div class="container">
+            <div class="intro-grid">
+                <div class="intro-text">
+                    <p class="section-label">Why It Matters</p>
+                    <h2>Current language models waste parameters on a single objective.</h2>
+                    <p>Most large language models treat all of language as one prediction problem. But language operates on multiple levels: fast token level patterns and slow discourse level structure like planning, topic shifts, and coherence. By explicitly modeling this separation, we can build models that learn richer representations with fewer parameters, reducing the compute barrier to capable AI.</p>
+                </div>
+                <div class="intro-stats">
+                    <div class="stat">
+                        <span class="stat-number">Hybrid</span>
+                        <span class="stat-label">Transformer SSM Architecture</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">1.57B</span>
+                        <span class="stat-label">Parameters Trained</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">Open</span>
+                        <span class="stat-label">Code, Weights & Paper</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Research Focus Cards -->
+    <section class="section section-focus">
+        <div class="container">
+            <p class="section-label">Research Focus</p>
+            <h2 class="section-title">Core areas of investigation</h2>
+            <div class="focus-grid">
+                <div class="focus-card">
+                    <div class="focus-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    </div>
+                    <h3>Hybrid Architectures</h3>
+                    <p>Designing models that combine multiple representation streams, such as Transformers and state space models, to capture both surface level and latent language dynamics.</p>
+                </div>
+                <div class="focus-card">
+                    <div class="focus-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    </div>
+                    <h3>Parameter Efficiency</h3>
+                    <p>Building models that achieve stronger performance with fewer parameters by rethinking how representations are structured and combined.</p>
+                </div>
+                <div class="focus-card">
+                    <div class="focus-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    </div>
+                    <h3>Multi Scale Representations</h3>
+                    <p>Exploring how language operates at multiple timescales, from fast token level prediction to slow discourse level planning, and modeling these processes explicitly.</p>
+                </div>
+                <div class="focus-card">
+                    <div class="focus-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z"/></svg>
+                    </div>
+                    <h3>Scaling Behavior</h3>
+                    <p>Studying how architectural innovations behave across model sizes, from 20M to 1.57B parameters, and how component contributions change with scale.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Current Work Highlight -->
+    <section class="section section-current">
+        <div class="container">
+            <div class="current-banner">
+                <div class="current-content">
+                    <p class="section-label">Current Work</p>
+                    <h2>LOLM: Scaling to 1.57B parameters and beyond.</h2>
+                    <p>Our flagship framework, LOLM (Latent Order Language Model), separates surface token prediction from latent discourse modeling in a unified hybrid architecture. We've validated the approach across four scale points (20.5M, 149M, 304M, 1.57B) and are actively working to push to 7B+ parameters on TPU infrastructure.</p>
+                    <div class="hero-actions" style="margin-top: 1.5rem;">
+                        <a href="projections.html" class="btn btn-primary">View Scaling Projections</a>
+                        <a href="#contact" class="btn btn-secondary">Support This Research</a>
+                    </div>
+                </div>
+                <div class="current-visual">
+                    <div class="pulse-ring"></div>
+                    <div class="pulse-ring delay-1"></div>
+                    <div class="pulse-ring delay-2"></div>
+                    <div class="pulse-dot"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. About QIRA -->
+    <section class="section section-about" id="about">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-main">
+                    <p class="section-label">About QIRA</p>
+                    <h2>Independent research,<br>open by default.</h2>
+                    <p>QIRA was founded on a specific thesis: that natural language has distinct surface level and latent level structure. Token sequences on the surface, and deeper processes like planning, discourse tracking, and topic management underneath. We believe modeling this separation explicitly is the path to more capable and more efficient language systems.</p>
+                    <p>We operate independently, publish all findings with open code and weights, and design every experiment for reproducibility. Our goal is not just to build better models, but to advance the community's collective understanding of how language models work.</p>
+                </div>
+                <div class="about-values">
+                    <div class="value">
+                        <h4>Mission</h4>
+                        <p>Prove that smarter architectures can replace brute force scaling. We build models that do more with less: fewer parameters, less compute, lower energy. We separate what language shows from what language means.</p>
+                    </div>
+                    <div class="value">
+                        <h4>Vision</h4>
+                        <p>A future where capable AI doesn't require datacenter scale resources. Hybrid architectures that achieve frontier level understanding at a fraction of the energy cost, putting serious research within reach of independent labs, not just corporations.</p>
+                    </div>
+                    <div class="value">
+                        <h4>Ethics &amp; Approach</h4>
+                        <p>Every watt matters. We design for efficiency as a moral position, not just an engineering goal. All research is published openly with code, weights, and full reproducibility. Progress locked behind closed doors isn't progress.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Research -->
+    <section class="section section-research" id="research">
+        <div class="container">
+            <p class="section-label">Research</p>
+            <h2 class="section-title">Research areas</h2>
+            <p class="section-subtitle">Four interconnected lines of investigation, all aimed at understanding and improving how language models represent and process information.</p>
+
+            <div class="research-areas">
+                <div class="research-area">
+                    <div class="research-number">01</div>
+                    <div class="research-content">
+                        <h3>Hybrid Transformer SSM Architectures</h3>
+                        <p>Designing models that combine the strengths of Transformer attention with state space model efficiency. We study how hybrid designs can capture both local dependencies and long range context more effectively than either approach alone.</p>
+                        <div class="research-tags">
+                            <span>Hybrid Models</span>
+                            <span>State Space Models</span>
+                            <span>Attention Mechanisms</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="research-area">
+                    <div class="research-number">02</div>
+                    <div class="research-content">
+                        <h3>Surface & Latent Representations</h3>
+                        <p>Exploring the hypothesis that language has distinct surface level and latent level structures. We investigate how explicitly separating these representations (surface token prediction and deeper discourse level modeling) can improve language understanding.</p>
+                        <div class="research-tags">
+                            <span>Multi Scale Modeling</span>
+                            <span>Latent Representations</span>
+                            <span>Discourse Structure</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="research-area">
+                    <div class="research-number">03</div>
+                    <div class="research-content">
+                        <h3>Scaling Behavior & Efficiency</h3>
+                        <p>Studying how model capabilities change across scales, from 20.5M to 1.57B parameters and beyond. At 304M the latent path contributes 17% of the signal. At 1.57B it contributes 29%. Removing it causes a 14,000,000x perplexity explosion, despite comprising the minority of the fused representation.</p>
+                        <div class="research-tags">
+                            <span>Scaling Laws</span>
+                            <span>Parameter Efficiency</span>
+                            <span>Compute Optimization</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="research-area">
+                    <div class="research-number">04</div>
+                    <div class="research-content">
+                        <h3>Multi Objective Training</h3>
+                        <p>Developing training paradigms that optimize for multiple objectives simultaneously, combining standard language modeling with auxiliary tasks that encourage richer internal representations and more robust generalization.</p>
+                        <div class="research-tags">
+                            <span>Training Paradigms</span>
+                            <span>Auxiliary Objectives</span>
+                            <span>Generalization</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="research-publications">
+                <h3>Publications</h3>
+                <div class="publication-entry">
+                    <div class="publication-year">2026</div>
+                    <div class="publication-details">
+                        <h4>LOLM: Language Modeling Beyond the Surface with Hybrid Transformer-SSM Latent Order Fields</h4>
+                        <p class="publication-authors">Bryan Leonard &amp; Brandyn Leonard, Qira LLC</p>
+                        <p class="publication-desc">Introduces a hybrid architecture that augments a Transformer decoder with four parallel subsystems (selective SSM, persistent memory, regime layer, manifestation gate), achieving 52.2% lower perplexity than Pythia-410M at matched compute and 15% improvement over a controlled baseline at 1.57B.</p>
+                        <div class="publication-links">
+                            <span>Code &amp; Weights Available</span>
+                            <a href="architecture.html" style="color: #818cf8; text-decoration: none; font-weight: 500; font-size: 0.85rem; transition: color 0.2s;">Interactive Architecture Diagram &rarr;</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Experiments / Projects -->
+    <section class="section section-projects" id="projects">
+        <div class="container">
+            <p class="section-label">Experiments & Projects</p>
+            <h2 class="section-title">Active projects</h2>
+            <p class="section-subtitle">What we're building and releasing right now.</p>
+
+            <div class="projects-grid">
+                <div class="project-card">
+                    <div class="project-status">Active</div>
+                    <h3>LOLM Model Family</h3>
+                    <p>Training and evaluating hybrid Transformer SSM language models across scales from 20.5M to 1.57B parameters. At 304M, LOLM achieves 52.2% lower perplexity than Pythia-410M at matched compute. At 1.57B, a 15% improvement over a controlled decoder only baseline.</p>
+                    <div class="project-meta">
+                        <span>Hybrid Architecture</span>
+                        <span>Scaling</span>
+                    </div>
+                </div>
+                <div class="project-card">
+                    <div class="project-status">Active</div>
+                    <h3>Multi Scale Training Experiments</h3>
+                    <p>Training with seven complementary loss terms: token cross entropy, contrastive predictive coding, changepoint alignment, regime diversity, competitive gate, memory focus, and gate regularization. Systematic ablations confirm all components contribute.</p>
+                    <div class="project-meta">
+                        <span>Training</span>
+                        <span>Multi Objective</span>
+                    </div>
+                </div>
+                <div class="project-card">
+                    <div class="project-status">Active</div>
+                    <h3>Open Model & Weight Releases</h3>
+                    <p>Releasing trained model checkpoints, code, and evaluation results for the research community. All LOLM model weights and training code are publicly available.</p>
+                    <div class="project-meta">
+                        <span>Open Source</span>
+                        <span>Reproducibility</span>
+                    </div>
+                </div>
+                <a href="projections.html" class="project-card project-card-link" style="text-decoration: none; color: inherit;">
+                    <div class="project-status" style="background: rgba(245,158,11,0.1); color: #f59e0b;">Interactive</div>
+                    <h3>Scaling Projections Dashboard</h3>
+                    <p>Interactive visualizations of LOLM's scaling behavior: gate trajectories, latent contribution, dependency inversion, PPL advantage, and compute efficiency across model sizes.</p>
+                    <div class="project-meta">
+                        <span>Data Visualization</span>
+                        <span>Scaling Analysis</span>
+                    </div>
+                </a>
+                <a href="gate-explorer.html" class="project-card project-card-link" style="text-decoration: none; color: inherit;">
+                    <div class="project-status" style="background: rgba(245,158,11,0.1); color: #f59e0b;">Interactive</div>
+                    <h3>Gate Behavior Explorer</h3>
+                    <p>See how LOLM's manifestation gate blends surface and latent representations per token, visualizing when the model leans on syntax vs discourse structure.</p>
+                    <div class="project-meta">
+                        <span>Manifestation Gate</span>
+                        <span>Token Analysis</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Compute & Infrastructure -->
+    <section class="section section-infra" id="infrastructure">
+        <div class="container">
+            <div class="infra-grid">
+                <div class="infra-content">
+                    <p class="section-label">Compute & Infrastructure</p>
+                    <h2>Research at meaningful scale.</h2>
+                    <p>All LOLM models through 1.57B were trained on a single NVIDIA H200 GPU (140GB). Scaling to 7B+ parameters requires distributed compute. QIRA is supported by the Google TPU Research Cloud, providing TPU v5e pod slices for the controlled 7B comparison and downstream benchmarks that will complete the evidence package.</p>
+                    <div class="supported-by">
+                        <span class="supported-by-label">Supported by</span>
+                        <div class="supported-by-logo">
+                            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                            <span>Google TPU Research Cloud</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="infra-capabilities">
+                    <div class="infra-item">
+                        <div class="infra-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                        </div>
+                        <div>
+                            <h4>Single GPU to TPU Scaling</h4>
+                            <p>All models through 1.57B trained on a single NVIDIA H200. Next phase: TPU v5e-16 pod slices for 7B controlled comparisons and full benchmark suites (MMLU, HellaSwag, ARC, LAMBADA, WinoGrande, PIQA).</p>
+                        </div>
+                    </div>
+                    <div class="infra-item">
+                        <div class="infra-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        </div>
+                        <div>
+                            <h4>Experiment Tracking & Reproducibility</h4>
+                            <p>Systematic logging of hyperparameters, loss curves, and evaluation metrics across all training runs. Every published result can be independently reproduced.</p>
+                        </div>
+                    </div>
+                    <div class="infra-item">
+                        <div class="infra-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                        </div>
+                        <div>
+                            <h4>Scaling Pipeline</h4>
+                            <p>Automated infrastructure for training the same architecture at multiple scales (20.5M, 149M, 304M, 1.57B) with consistent evaluation across all checkpoints.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. Blog / Research Notes -->
+    <section class="section section-blog" id="blog">
+        <div class="container">
+            <p class="section-label">Blog & Research Notes</p>
+            <h2 class="section-title">Insights from the lab</h2>
+            <p class="section-subtitle">Technical deep dives and research notes from our ongoing work.</p>
+
+            <div class="blog-grid">
+                <a href="blog-hybrid-architectures.html" class="blog-card blog-featured">
+                    <div class="blog-date">March 2026</div>
+                    <h3>Why Hybrid Architectures Matter</h3>
+                    <p>Combining Transformers and state space models for next generation language modeling. What each brings to the table, why neither alone is sufficient, and how LOLM's per dimension gating enables dependency inversion.</p>
+                    <div class="blog-tags">
+                        <span>Architecture</span>
+                        <span>Hybrid Models</span>
+                    </div>
+                </a>
+                <a href="blog-scaling.html" class="blog-card">
+                    <div class="blog-date">March 2026</div>
+                    <h3>Scaling from 20M to 1.57B: What We Learned</h3>
+                    <p>Emergent behaviors, gate trajectory reversals, regime code collapse solutions, and 2x compute efficiency. Observations from training LOLM across four orders of magnitude.</p>
+                    <div class="blog-tags">
+                        <span>Scaling</span>
+                        <span>LOLM</span>
+                    </div>
+                </a>
+                <a href="blog-surface-vs-latent.html" class="blog-card">
+                    <div class="blog-date">March 2026</div>
+                    <h3>Surface vs. Latent: Rethinking Language Representations</h3>
+                    <p>An introduction to dual stream language modeling. Why a single representation is unnecessarily lossy, and how explicitly separating surface and latent streams enables representations that single stream models cannot learn.</p>
+                    <div class="blog-tags">
+                        <span>Representations</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. Team -->
+    <section class="section section-team" id="team">
+        <div class="container">
+            <p class="section-label">Team</p>
+            <h2 class="section-title">The people behind QIRA</h2>
+            <p class="section-subtitle">Independent researchers building at the frontier of language model architecture.</p>
+
+            <div class="team-grid">
+                <div class="team-card">
+                    <img class="team-avatar-img" src="IMG_7948.png" alt="Bryan Leonard" loading="lazy" style="object-position: center 28%;">
+                    <h3>Bryan Leonard</h3>
+                    <p class="team-role">Co-Founder / AI Researcher</p>
+                    <p class="team-bio">Builds the groundwork that makes LOLM possible. Owns training infrastructure, experiment pipelines, and day to day model runs. From setting up multi GPU environments to debugging loss curves at 3 AM. Responsible for scaling experiments across all five model sizes.</p>
+                </div>
+                <div class="team-card">
+                    <img class="team-avatar-img" src="IMG_7947.png" alt="Brandyn Leonard" loading="lazy" style="object-position: center 50%; transform: scale(1.3);">
+                    <h3>Brandyn Leonard</h3>
+                    <p class="team-role">Co-Founder / AI Researcher</p>
+                    <p class="team-bio">The architect behind LOLM's design. Drives the big picture research direction: hybrid architecture design, data implementation strategy, and the surface latent separation thesis. Translates theoretical insight into model architecture and defines what QIRA builds next.</p>
+                </div>
+            </div>
+
+            <div class="team-note">
+                <p>QIRA operates as a focused two person research lab. We believe meaningful AI breakthroughs come from depth of investigation, not size of team. All our work is published openly with code and weights.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. Contact / Collaboration -->
+    <section class="section section-contact" id="contact">
+        <div class="container">
+            <div class="contact-grid">
+                <div class="contact-content">
+                    <p class="section-label">Contact</p>
+                    <h2>Work with us.</h2>
+                    <p>We're actively seeking research partnerships, compute grants, and institutional collaborations to accelerate our work on hybrid language model architectures.</p>
+                    <div class="contact-types">
+                        <div class="contact-type">
+                            <h4>Grant & Funding Bodies</h4>
+                            <p>We're pursuing grants to scale our hybrid architecture research beyond 1.57B parameters. Our work is open access and reproducible by design.</p>
+                        </div>
+                        <div class="contact-type">
+                            <h4>Academic Collaborators</h4>
+                            <p>Researchers working on architecture design, scaling laws, or multi objective training. We welcome collaboration and coauthorship.</p>
+                        </div>
+                        <div class="contact-type">
+                            <h4>Compute Partners</h4>
+                            <p>Cloud providers, GPU sponsors, and compute grant programs. Additional resources directly translate to larger scale experiments and faster progress.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form-wrap">
+                    <form class="contact-form" id="contact-form">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" required placeholder="Your name">
+                            <span class="form-error-msg">Please enter your name</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required placeholder="you@example.com">
+                            <span class="form-error-msg">Please enter a valid email</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="type">I am a...</label>
+                            <select id="type" name="type">
+                                <option value="">Select one</option>
+                                <option value="grant-funding">Grant / Funding Body</option>
+                                <option value="academic">Academic Collaborator</option>
+                                <option value="compute">Compute Partner</option>
+                                <option value="researcher">Independent Researcher</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" name="message" rows="4" required placeholder="Tell us what you're interested in..."></textarea>
+                            <span class="form-error-msg">Please enter a message</span>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <span class="footer-logo"><span class="nav-logo-icon" style="width:36px;height:36px;"><img src="qira_logo_full.png" alt="QIRA"></span><span class="nav-logo-text" style="font-size:16px;">QIRA</span></span>
+                    <p>Independent AI Research</p>
+                </div>
+                <div class="footer-links">
+                    <a href="#about">About</a>
+                    <a href="#research">Research</a>
+                    <a href="#projects">Projects</a>
+                    <a href="#blog">Blog</a>
+                    <a href="#contact">Contact</a>
+                </div>
+                <div class="footer-copy">
+                    <p>&copy; 2026 QIRA. All rights reserved.</p>
+                    <p class="footer-supported">Supported by Google TPU Research Cloud</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <button class="back-to-top" id="back-to-top" aria-label="Back to top">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+    </button>
+
+    <script src="script.js"></script>
+</body>
+</html>

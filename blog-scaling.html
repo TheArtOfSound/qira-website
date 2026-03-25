@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%236366f1'/><text x='16' y='22' text-anchor='middle' fill='white' font-family='Arial' font-size='18' font-weight='bold'>Q</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scaling from 20.5M to 1.57B | QIRA</title>
+    <meta name="description" content="Scaling LOLM from 20.5M to 1.57B parameters. How gate dynamics, component contributions, and representation quality evolve across four model sizes.">
+    <meta property="og:title" content="Scaling from 20.5M to 1.57B | QIRA">
+    <meta property="og:description" content="Scaling LOLM from 20.5M to 1.57B parameters. How gate dynamics, component contributions, and representation quality evolve across four model sizes.">
+    <meta property="og:image" content="qira_logo_full.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Scaling from 20.5M to 1.57B | QIRA">
+    <meta name="twitter:description" content="Scaling LOLM from 20.5M to 1.57B parameters. How gate dynamics, component contributions, and representation quality evolve across four model sizes.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="article.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="scroll-progress" id="scroll-progress"></div>
+    <div class="cursor-glow" id="cursor-glow"></div>
+
+    <nav class="nav scrolled" id="nav">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo"><div class="nav-logo-icon"><img src="qira_logo_full.png" alt="QIRA"></div><span class="nav-logo-text">QIRA</span></a>
+            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#research">Research</a></li>
+                <li><a href="index.html#projects">Projects</a></li>
+                <li><a href="index.html#infrastructure">Infrastructure</a></li>
+                <li><a href="index.html#blog">Blog</a></li>
+                <li><a href="index.html#team">Team</a></li>
+                <li><a href="index.html#contact" class="nav-cta">Contact</a></li>
+            </ul>
+            <div class="nav-backdrop" id="nav-backdrop"></div>
+        </div>
+    </nav>
+
+    <header class="article-header">
+        <div class="container">
+            <a href="index.html#blog" class="article-back">&larr; Back to Blog</a>
+            <div class="article-meta-top">
+                <span class="article-tag">Scaling</span>
+                <span class="article-tag">LOLM</span>
+            </div>
+            <h1 class="article-title">Scaling from 20.5M to 1.57B: What We Learned</h1>
+            <p class="article-subtitle">Emergent Behaviors, Efficiency Breakpoints, and Scaling Dynamics in the LOLM Architecture</p>
+            <div class="article-info">
+                <span class="article-authors">Bryan Leonard &amp; Brandyn Leonard</span>
+                <span class="article-separator">&middot;</span>
+                <span class="article-org">Qira LLC</span>
+                <span class="article-separator">&middot;</span>
+                <span class="article-date">2026</span>
+            </div>
+        </div>
+    </header>
+
+    <article class="article-body">
+        <div class="container article-container">
+
+            <div class="article-abstract">
+                <h2>Abstract</h2>
+                <p>We report observations from training the Latent Order Language Model (LOLM) across four scales: 20.5M, 149M, 304M, and 1.57B parameters, spanning datasets from TinyStories to FineWeb-Edu. Across this range, we observe several emergent phenomena: a characteristic gate trajectory that reverses direction during training, regime codes that resist collapse at scale when trained with gradient isolation, a contrastive predictive coding (CPC) loss that transitions from random chance to near perfect future state prediction, and a dependency inversion between surface and latent pathways that intensifies with scale. We document these behaviors quantitatively and discuss what the scaling curves suggest about the architecture's trajectory at larger scales.</p>
+            </div>
+
+            <section class="article-section">
+                <h2><span class="section-num">1.</span> Introduction</h2>
+                <p>Scaling laws for Transformer language models are well characterized: loss decreases as a power law with model size, dataset size, and compute. But these laws describe a single architectural paradigm. When the architecture itself contains heterogeneous components (attention, recurrence, discrete codes, memory), the scaling dynamics become richer and less predictable. Components may activate at different scales, interact in unexpected ways, or exhibit phase transitions that pure Transformers do not.</p>
+                <p>LOLM provides a natural laboratory for studying these dynamics. With five distinct subsystems (surface decoder, latent SSM, regime layer, persistent memory, and manifestation gate), each trained by its own objective, the architecture offers multiple observable signals that reveal how the model's internal organization evolves across scale.</p>
+            </section>
+
+            <section class="article-section">
+                <h2><span class="section-num">2.</span> Training Configurations</h2>
+                <p>We trained LOLM at four scales with progressively larger datasets and richer architectural configurations:</p>
+                <div class="article-table-wrap">
+                    <table class="article-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>20.5M</th>
+                                <th>149M</th>
+                                <th>304M</th>
+                                <th>1.57B</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Dataset</td><td>TinyStories</td><td>FineWeb-Edu</td><td>FineWeb-Edu</td><td>FineWeb-Edu</td></tr>
+                            <tr><td>d_model</td><td>256</td><td>768</td><td>1024</td><td>2048</td></tr>
+                            <tr><td>Decoder layers</td><td>6</td><td>12</td><td>16</td><td>24</td></tr>
+                            <tr><td>SSM layers</td><td>2</td><td>2</td><td>4</td><td>6</td></tr>
+                            <tr><td>Regime codes</td><td>16</td><td>24</td><td>32</td><td>64</td></tr>
+                            <tr><td>Memory slots</td><td>32</td><td>64</td><td>128</td><td>256</td></tr>
+                            <tr><td>Final train PPL</td><td>13.7</td><td>63.2</td><td>35.5</td><td>~34.5</td></tr>
+                            <tr><td>Gate at convergence</td><td>0.27</td><td>0.55</td><td>0.83</td><td>0.72</td></tr>
+                            <tr><td>Regimes alive</td><td>1/16</td><td>1/24</td><td>32/32</td><td>64/64</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="article-section">
+                <h2><span class="section-num">3.</span> The Gate Trajectory: A Reversal in Two Acts</h2>
+                <p>At every scale, the manifestation gate exhibits a characteristic two phase trajectory. In the first phase, the gate moves toward 0 (latent preferring): at 304M it drops to approximately 0.17 by step 1,800; at 1.57B it drops even further to 0.125 by step 2,000. During this phase, the model is leaning heavily on the latent SSM, and the learning rate is near its peak.</p>
+                <p>In the second phase, the gate reverses and climbs toward a surface preferring equilibrium. At 304M it crosses 0.5 around step 3,300 and settles at 0.83 by step 5,000. At 1.57B it climbs more slowly and settles at 0.72 by step 20,000. The lower equilibrium at 1.57B means the model allocates more capacity to the latent path at larger scale, consistent with the latent SSM becoming more useful as model complexity increases.</p>
+                <p>The reversal is not a simple artifact of learning rate scheduling. It reflects a genuine change in how the model distributes computation: early in training, the SSM provides a useful inductive bias before the Transformer has learned meaningful attention patterns. As the Transformer matures, it reclaims the majority of the representation. But it never reclaims all of it. The gate never reaches 1.0, because the SSM captures structure that the Transformer cannot.</p>
+            </section>
+
+            <section class="article-section">
+                <h2><span class="section-num">4.</span> Regime Codes: Solving Collapse at Scale</h2>
+                <p>Discrete codebooks in language models are notorious for collapsing. The token prediction loss, which is orders of magnitude larger than any auxiliary diversity loss, backpropagates into the codebook and drives all codes toward a single embedding. In LOLM's first training attempts, regime codes collapsed from 32 to 1 within 500-2,000 steps at every scale.</p>
+                <p>The solution was gradient isolation: detaching the regime embedding before it enters the fusion equation. The regime layer is then trained exclusively by its own objectives (changepoint alignment, load balancing, and entropy regularization). Combined with logit clamping at [-5, 5] and maintaining Gumbel-Softmax temperature above 0.5, this completely prevents collapse.</p>
+                <p>The scaling behavior is notable: at 20.5M and 149M (before gradient isolation was implemented), only 1 code survived. At 304M and 1.57B (with gradient isolation), all 32 and all 64 codes respectively remain active with near maximum usage entropy throughout training. The fix is binary: without it, collapse is total; with it, diversity is complete.</p>
+            </section>
+
+            <section class="article-section">
+                <h2><span class="section-num">5.</span> CPC: From Random Chance to Precise Prediction</h2>
+                <p>The contrastive predictive coding (CPC) objective trains the latent SSM to predict future decoder states from current latent states. The CPC loss was stuck at random chance (5.55 = ln(256)) for all training runs until the introduction of SimCLR/CLIP style projection heads.</p>
+                <p>The root cause was a dimensionality temperature mismatch. In high dimensional space (d=1024), random unit vectors have cosine similarity standard deviation of approximately 1/&radic;d &asymp; 0.031. With CPC temperature 0.1, the logit standard deviation was only 0.31, far too small for meaningful softmax discrimination over 256 positions. The fix: project both representations through separate 2 layer MLPs down to 128 dimensions, where cosine similarity std is 0.088. With temperature 0.07, logit std becomes 1.26, well within the learnable range.</p>
+                <p>After this fix, CPC loss dropped from 5.55 to 0.15 at 304M, a 37x reduction, confirming that the SSM encodes highly precise information about future decoder states. This is direct evidence that the latent path captures meaningful sequential structure, not noise.</p>
+            </section>
+
+            <section class="article-section">
+                <h2><span class="section-num">6.</span> Compute Efficiency: The 2x Result</h2>
+                <p>In a controlled comparison at 1.57B parameters (same data, same tokenizer, same hardware, same training budget), LOLM reaches the baseline's step 20,000 perplexity (39.1) at approximately step 10,000. This represents roughly 2x compute efficiency: LOLM achieves equivalent modeling quality in half the training steps.</p>
+                <p>The advantage is largest early in training (42.8x at step 2,000) and narrows as both models converge, stabilizing at approximately 1.2-1.3x from step 13,000 onward. At step 20,000, LOLM achieves 33.2 perplexity versus the baseline's 39.1, a 15% advantage that shows no sign of closing.</p>
+            </section>
+
+            <section class="article-section">
+                <h2><span class="section-num">7.</span> What the Scaling Curves Suggest</h2>
+                <p>Several trends from 20.5M to 1.57B point in consistent directions. The gate equilibrium shifts toward more latent contribution at larger scale (0.27 &rarr; 0.55 &rarr; 0.83 &rarr; 0.72). More regime codes activate and stay alive. The CPC loss decreases, indicating better future state prediction. The dependency inversion between surface and latent paths intensifies.</p>
+                <p>If these trends extrapolate, we would expect a 7B LOLM to settle with an even lower gate value (more latent contribution), maintain all regime codes with higher usage entropy, and exhibit even stronger dependency on the latent pathway. The architecture appears to be entering a regime where the latent subsystem is not a supplement to the Transformer but a structural coequal.</p>
+                <p>TPU scale training at 7B and beyond will test whether these trends hold or saturate. These experiments are planned as the next phase of this research.</p>
+            </section>
+
+            <section class="article-section">
+                <h2><span class="section-num">8.</span> Conclusion</h2>
+                <p>Training LOLM across four orders of magnitude reveals that hybrid architectures exhibit richer scaling dynamics than homogeneous Transformers. Components activate at different scales, gate trajectories undergo reversals, and the balance of power between surface and latent pathways shifts systematically with model size. These observations suggest that scaling hybrid architectures is not simply a matter of adding parameters. It involves navigating an evolving landscape of intercomponent dynamics that may unlock capabilities unavailable to any single paradigm.</p>
+            </section>
+
+            <div class="article-footer-meta">
+                <p>Qira LLC, Leonard &amp; Leonard, 2026</p>
+                <a href="Qira_Scaling_20M_to_1.57B.pdf" class="btn btn-secondary" target="_blank">Download PDF</a>
+            </div>
+
+        </div>
+    </article>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <span class="footer-logo"><span class="nav-logo-icon" style="width:36px;height:36px;"><img src="qira_logo_full.png" alt="QIRA"></span><span class="nav-logo-text" style="font-size:16px;">QIRA</span></span>
+                    <p>Independent AI Research</p>
+                </div>
+                <div class="footer-links">
+                    <a href="index.html#about">About</a>
+                    <a href="index.html#research">Research</a>
+                    <a href="index.html#projects">Projects</a>
+                    <a href="index.html#blog">Blog</a>
+                    <a href="index.html#contact">Contact</a>
+                </div>
+                <div class="footer-copy">
+                    <p>&copy; 2026 QIRA. All rights reserved.</p>
+                    <p class="footer-supported">Supported by Google TPU Research Cloud</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <button class="back-to-top" id="back-to-top" aria-label="Back to top">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+    </button>
+
+    <script src="script.js"></script>
+</body>
+</html>

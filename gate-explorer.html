@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%236366f1'/><text x='16' y='22' text-anchor='middle' fill='white' font-family='Arial' font-size='18' font-weight='bold'>Q</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gate Behavior Explorer | QIRA</title>
+    <meta name="description" content="Visualize how LOLM's manifestation gate blends surface and latent representations per token. Explore gate values across example sentences interactively.">
+    <meta property="og:title" content="Gate Behavior Explorer | QIRA">
+    <meta property="og:description" content="Visualize how LOLM's manifestation gate blends surface and latent representations per token. Explore gate values across example sentences interactively.">
+    <meta property="og:image" content="qira_logo_full.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Gate Behavior Explorer | QIRA">
+    <meta name="twitter:description" content="Visualize how LOLM's manifestation gate blends surface and latent representations per token. Explore gate values across example sentences interactively.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #0a0a0b;
+            color: #e2e8f0;
+            font-family: 'Inter', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+        .gnav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(10,10,11,0.92); backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .gnav-inner {
+            max-width: 1200px; margin: 0 auto; display: flex;
+            align-items: center; justify-content: space-between;
+            height: 64px; padding: 0 24px;
+        }
+        .gnav-logo {
+            display: flex; align-items: center; gap: 10px; text-decoration: none;
+        }
+        .gnav-logo-icon {
+            width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+        }
+        .gnav-logo-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .gnav-logo-text {
+            font-size: 18px; font-weight: 700; color: #fff; letter-spacing: 0.08em;
+        }
+        .gnav-back {
+            color: #94a3b8; text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s;
+        }
+        .gnav-back:hover { color: #6366f1; }
+
+        .gate-container {
+            max-width: 1000px; margin: 0 auto; padding: 96px 24px 60px;
+        }
+        .gate-title {
+            font-size: 28px; font-weight: 800; color: #fff; letter-spacing: -0.03em; margin-bottom: 6px;
+        }
+        .gate-desc {
+            color: #94a3b8; font-size: 14px; line-height: 1.6; max-width: 640px; margin-bottom: 28px;
+        }
+
+        .gate-tabs {
+            display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px;
+        }
+        .gate-tab {
+            padding: 7px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.03); color: #94a3b8; font-size: 12px;
+            font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: inherit;
+        }
+        .gate-tab:hover { border-color: rgba(99,102,241,0.3); color: #c4c4cc; }
+        .gate-tab.active {
+            background: #6366f1; color: #fff; border-color: #6366f1;
+        }
+
+        .gate-viz-wrap {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px; padding: 24px; margin-bottom: 16px;
+        }
+        .gate-heatmap {
+            display: flex; flex-wrap: wrap; gap: 5px; min-height: 44px;
+            transition: opacity 0.18s ease;
+        }
+        .gate-token {
+            display: inline-flex; align-items: center; padding: 7px 11px;
+            border-radius: 6px; font-family: 'JetBrains Mono', monospace;
+            font-size: 13px; font-weight: 500; color: #fff; cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            position: relative; user-select: none;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .gate-token:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 0 16px rgba(99,102,241,0.25);
+        }
+
+        .gate-tooltip {
+            position: fixed; z-index: 200; pointer-events: none;
+            background: rgba(12,14,26,0.95); border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 8px; padding: 10px 14px; opacity: 0;
+            transition: opacity 0.15s; backdrop-filter: blur(8px);
+            max-width: 200px;
+        }
+        .gate-tooltip.visible { opacity: 1; }
+        .gate-tooltip-token {
+            font-family: 'JetBrains Mono', monospace; font-size: 14px;
+            font-weight: 600; color: #fff; margin-bottom: 4px;
+        }
+        .gate-tooltip-val {
+            font-family: 'JetBrains Mono', monospace; font-size: 12px;
+            color: #a0a0b0; margin-bottom: 3px;
+        }
+        .gate-tooltip-class {
+            font-size: 11px; font-weight: 600; padding: 2px 8px;
+            border-radius: 4px; display: inline-block;
+        }
+
+        .gate-scale {
+            margin-top: 18px;
+        }
+        .gate-scale-bar {
+            height: 10px; border-radius: 5px;
+            background: linear-gradient(to right, #3A5FE8, #6B5DA0, #9A5B58, #C06010);
+        }
+        .gate-scale-labels {
+            display: flex; justify-content: space-between; margin-top: 5px;
+            font-size: 11px; color: #64748b;
+        }
+
+        .gate-stats {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;
+        }
+        .gate-stat-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px; padding: 14px 16px; text-align: center;
+        }
+        .gate-stat-val {
+            font-family: 'JetBrains Mono', monospace; font-size: 22px;
+            font-weight: 700; color: #fff; margin-bottom: 2px;
+        }
+        .gate-stat-label {
+            font-size: 11px; color: #64748b; font-weight: 500;
+        }
+
+        .gate-info {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px;
+        }
+        .gate-info-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px; padding: 16px;
+        }
+        .gate-info-card h3 {
+            font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 6px;
+        }
+        .gate-info-card p {
+            font-size: 12px; color: #94a3b8; line-height: 1.6;
+        }
+
+        .gate-footer {
+            margin-top: 24px; border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 14px;
+        }
+        .gate-footer p {
+            font-size: 11px; color: #64748b; line-height: 1.5;
+        }
+
+        @media (max-width: 640px) {
+            .gate-stats { grid-template-columns: repeat(2, 1fr); }
+            .gate-info { grid-template-columns: 1fr; }
+            .gate-title { font-size: 22px; }
+            .gate-token { font-size: 12px; padding: 5px 8px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="gnav">
+        <div class="gnav-inner">
+            <a href="index.html" class="gnav-logo">
+                <div class="gnav-logo-icon"><img src="qira_logo_full.png" alt="QIRA"></div>
+                <span class="gnav-logo-text">QIRA</span>
+            </a>
+            <a href="index.html#research" class="gnav-back">&larr; Back to Research</a>
+        </div>
+    </nav>
+
+    <div class="gate-container">
+        <h1 class="gate-title">Gate Behavior Explorer</h1>
+        <p class="gate-desc">Visualizing how LOLM's manifestation gate allocates between surface and latent representations for each token. Select an example sentence to see per token gate values.</p>
+
+        <div class="gate-tabs" id="gate-tabs"></div>
+
+        <div class="gate-viz-wrap">
+            <div class="gate-heatmap" id="gate-heatmap"></div>
+            <div class="gate-scale">
+                <div class="gate-scale-bar"></div>
+                <div class="gate-scale-labels">
+                    <span>Surface (g&rarr;1)</span>
+                    <span>Mixed</span>
+                    <span>Latent (g&rarr;0)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="gate-stats">
+            <div class="gate-stat-card">
+                <div class="gate-stat-val" id="stat-avg">--</div>
+                <div class="gate-stat-label">Avg Gate Value</div>
+            </div>
+            <div class="gate-stat-card">
+                <div class="gate-stat-val" id="stat-surface">--</div>
+                <div class="gate-stat-label">Surface Dominant</div>
+            </div>
+            <div class="gate-stat-card">
+                <div class="gate-stat-val" id="stat-latent">--</div>
+                <div class="gate-stat-label">Latent Dominant</div>
+            </div>
+            <div class="gate-stat-card">
+                <div class="gate-stat-val" id="stat-count">--</div>
+                <div class="gate-stat-label">Token Count</div>
+            </div>
+        </div>
+
+        <div class="gate-info">
+            <div class="gate-info-card">
+                <h3>What the Gate Does</h3>
+                <p>The manifestation gate is a per dimension vector g &isin; [0,1]<sup>d</sup> that blends surface (Transformer) and latent (SSM) representations via the fusion equation: g&odot;LN(W<sub>h</sub>h) + (1-g)&odot;LN(W<sub>z</sub>z) + W<sub>m</sub>m + W<sub>r</sub>r&#772;. Each dimension independently learns how much to draw from each source.</p>
+            </div>
+            <div class="gate-info-card">
+                <h3>How to Read This</h3>
+                <p>Blue tokens are surface dominant. The model relies on local syntax and token level patterns. Orange tokens are latent dominant, meaning the model draws on discourse structure, long range context, or topic information. Hover any token for details.</p>
+            </div>
+            <div class="gate-info-card">
+                <h3>Key Insight</h3>
+                <p>Function words and punctuation are consistently surface dominant. Discourse connectives (however, meanwhile), distant pronoun references, and topic shift markers go latent. The gate learns this allocation without explicit supervision.</p>
+            </div>
+        </div>
+
+        <div class="gate-footer">
+            <p>Gate values shown are illustrative examples based on LOLM's observed behavior patterns. At 304M (d=1024), the gate equilibrium is g&asymp;0.83 (17% latent). At 1.57B (d=2048), it settles at g&asymp;0.71 (29% latent). The gate is trained by the competitive loss, which tracks which branch better predicts future states.</p>
+            <p style="margin-top:6px;">Qira LLC, Leonard & Leonard, 2026</p>
+            <p style="margin-top:6px;">&copy; 2026 QIRA. All rights reserved.</p>
+        </div>
+    </div>
+
+    <div class="gate-tooltip" id="gate-tooltip">
+        <div class="gate-tooltip-token" id="tt-token"></div>
+        <div class="gate-tooltip-val" id="tt-val"></div>
+        <div class="gate-tooltip-class" id="tt-class"></div>
+    </div>
+
+    <script>
+    (function() {
+        var DATA = [
+            {
+                label: 'Simple Syntax',
+                tokens: [
+                    {t:'The',g:0.92},{t:'cat',g:0.74},{t:'sat',g:0.78},{t:'on',g:0.91},
+                    {t:'the',g:0.93},{t:'mat',g:0.72},{t:'.',g:0.95}
+                ]
+            },
+            {
+                label: 'Discourse Transition',
+                tokens: [
+                    {t:'The',g:0.91},{t:'experiment',g:0.65},{t:'failed',g:0.68},{t:'.',g:0.94},
+                    {t:'However',g:0.18},{t:',',g:0.88},{t:'the',g:0.90},{t:'subsequent',g:0.35},
+                    {t:'analysis',g:0.58},{t:'revealed',g:0.42},{t:'a',g:0.89},{t:'critical',g:0.55},
+                    {t:'flaw',g:0.48},{t:'in',g:0.87},{t:'the',g:0.90},{t:'methodology',g:0.52},
+                    {t:'.',g:0.93}
+                ]
+            },
+            {
+                label: 'Long Range Reference',
+                tokens: [
+                    {t:'Dr.',g:0.82},{t:'Chen',g:0.70},{t:'published',g:0.72},{t:'her',g:0.61},
+                    {t:'findings',g:0.65},{t:'in',g:0.88},{t:'March',g:0.76},{t:'.',g:0.94},
+                    {t:'The',g:0.89},{t:'results',g:0.52},{t:'contradicted',g:0.38},
+                    {t:'her',g:0.28},{t:'earlier',g:0.33},{t:'work',g:0.55},{t:',',g:0.87},
+                    {t:'but',g:0.31},{t:'she',g:0.24},{t:'stood',g:0.45},{t:'by',g:0.82},
+                    {t:'them',g:0.30},{t:'.',g:0.93}
+                ]
+            },
+            {
+                label: 'Technical Structure',
+                tokens: [
+                    {t:'The',g:0.90},{t:'transformer',g:0.62},{t:'processes',g:0.70},
+                    {t:'tokens',g:0.68},{t:'in',g:0.86},{t:'parallel',g:0.60},
+                    {t:'using',g:0.75},{t:'self attention',g:0.55},{t:',',g:0.87},
+                    {t:'while',g:0.25},{t:'the',g:0.89},{t:'SSM',g:0.58},{t:'captures',g:0.66},
+                    {t:'sequential',g:0.50},{t:'dependencies',g:0.48},{t:'through',g:0.80},
+                    {t:'recurrent',g:0.52},{t:'state',g:0.57},{t:'updates',g:0.62},{t:'.',g:0.93}
+                ]
+            },
+            {
+                label: 'Topic Shift',
+                tokens: [
+                    {t:'Revenue',g:0.68},{t:'increased',g:0.72},{t:'12%',g:0.80},
+                    {t:'this',g:0.85},{t:'quarter',g:0.74},{t:'.',g:0.94},
+                    {t:'Meanwhile',g:0.12},{t:',',g:0.87},{t:'the',g:0.89},{t:'team',g:0.55},
+                    {t:'began',g:0.60},{t:'exploring',g:0.45},{t:'applications',g:0.40},
+                    {t:'in',g:0.86},{t:'healthcare',g:0.38},{t:'.',g:0.93}
+                ]
+            }
+        ];
+
+        var active = 0;
+        var heatmap = document.getElementById('gate-heatmap');
+        var tabsEl = document.getElementById('gate-tabs');
+        var tooltip = document.getElementById('gate-tooltip');
+        var ttToken = document.getElementById('tt-token');
+        var ttVal = document.getElementById('tt-val');
+        var ttClass = document.getElementById('tt-class');
+
+        function gateColor(g) {
+            var r = Math.round(192 + (58 - 192) * g);
+            var gn = Math.round(96 + (95 - 96) * g);
+            var b = Math.round(16 + (232 - 16) * g);
+            return 'rgb(' + r + ',' + gn + ',' + b + ')';
+        }
+
+        function classify(g) {
+            if (g > 0.6) return { label: 'Surface', color: '#3A5FE8', bg: 'rgba(58,95,232,0.15)' };
+            if (g < 0.4) return { label: 'Latent', color: '#C06010', bg: 'rgba(192,96,16,0.15)' };
+            return { label: 'Mixed', color: '#9B7BA0', bg: 'rgba(155,123,160,0.15)' };
+        }
+
+        function buildTabs() {
+            tabsEl.innerHTML = '';
+            for (var i = 0; i < DATA.length; i++) {
+                var btn = document.createElement('button');
+                btn.className = 'gate-tab' + (i === active ? ' active' : '');
+                btn.textContent = DATA[i].label;
+                btn.setAttribute('data-idx', i);
+                tabsEl.appendChild(btn);
+            }
+        }
+
+        function renderTokens(idx) {
+            var tokens = DATA[idx].tokens;
+            heatmap.style.opacity = '0';
+            setTimeout(function() {
+                heatmap.innerHTML = '';
+                for (var i = 0; i < tokens.length; i++) {
+                    var span = document.createElement('span');
+                    span.className = 'gate-token';
+                    span.textContent = tokens[i].t;
+                    span.style.background = gateColor(tokens[i].g);
+                    span.setAttribute('data-gate', tokens[i].g);
+                    span.setAttribute('data-text', tokens[i].t);
+                    heatmap.appendChild(span);
+                }
+                heatmap.style.opacity = '1';
+            }, 60);
+        }
+
+        function renderStats(idx) {
+            var tokens = DATA[idx].tokens;
+            var sum = 0, surf = 0, lat = 0;
+            for (var i = 0; i < tokens.length; i++) {
+                sum += tokens[i].g;
+                if (tokens[i].g > 0.6) surf++;
+                if (tokens[i].g < 0.4) lat++;
+            }
+            var avg = sum / tokens.length;
+            document.getElementById('stat-avg').textContent = avg.toFixed(2);
+            document.getElementById('stat-surface').textContent = Math.round(surf / tokens.length * 100) + '%';
+            document.getElementById('stat-latent').textContent = Math.round(lat / tokens.length * 100) + '%';
+            document.getElementById('stat-count').textContent = tokens.length;
+        }
+
+        function showTooltip(e, text, gate) {
+            var cl = classify(gate);
+            ttToken.textContent = '"' + text + '"';
+            ttVal.textContent = 'g = ' + gate.toFixed(2);
+            ttClass.textContent = cl.label;
+            ttClass.style.color = cl.color;
+            ttClass.style.background = cl.bg;
+
+            var tx = e.clientX + 14;
+            var ty = e.clientY - 10;
+            if (tx + 180 > window.innerWidth) tx = e.clientX - 180;
+            if (ty + 80 > window.innerHeight) ty = e.clientY - 80;
+            tooltip.style.left = tx + 'px';
+            tooltip.style.top = ty + 'px';
+            tooltip.classList.add('visible');
+        }
+
+        function hideTooltip() {
+            tooltip.classList.remove('visible');
+        }
+
+        function switchTo(idx) {
+            active = idx;
+            var tabs = tabsEl.querySelectorAll('.gate-tab');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.toggle('active', i === idx);
+            }
+            renderTokens(idx);
+            renderStats(idx);
+            hideTooltip();
+        }
+
+        tabsEl.addEventListener('click', function(e) {
+            var btn = e.target.closest('.gate-tab');
+            if (!btn) return;
+            var idx = parseInt(btn.getAttribute('data-idx'), 10);
+            if (idx !== active) switchTo(idx);
+        });
+
+        heatmap.addEventListener('mousemove', function(e) {
+            var tok = e.target.closest('.gate-token');
+            if (!tok) { hideTooltip(); return; }
+            showTooltip(e, tok.getAttribute('data-text'), parseFloat(tok.getAttribute('data-gate')));
+        });
+        heatmap.addEventListener('mouseleave', hideTooltip);
+
+        heatmap.addEventListener('click', function(e) {
+            var tok = e.target.closest('.gate-token');
+            if (!tok) { hideTooltip(); return; }
+            if (tooltip.classList.contains('visible')) { hideTooltip(); }
+            else { showTooltip(e, tok.getAttribute('data-text'), parseFloat(tok.getAttribute('data-gate'))); }
+        });
+
+        buildTabs();
+        renderTokens(0);
+        renderStats(0);
+    })();
+    </script>
+</body>
+</html>

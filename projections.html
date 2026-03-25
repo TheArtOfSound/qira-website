@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%236366f1'/><text x='16' y='22' text-anchor='middle' fill='white' font-family='Arial' font-size='18' font-weight='bold'>Q</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOLM Scaling Projections | QIRA</title>
+    <meta name="description" content="Interactive scaling projections for LOLM from 20.5M to 7B parameters. Explore predicted perplexity, gate dynamics, and training compute across model sizes.">
+    <meta property="og:title" content="LOLM Scaling Projections | QIRA">
+    <meta property="og:description" content="Interactive scaling projections for LOLM from 20.5M to 7B parameters. Explore predicted perplexity, gate dynamics, and training compute across model sizes.">
+    <meta property="og:image" content="qira_logo_full.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="LOLM Scaling Projections | QIRA">
+    <meta name="twitter:description" content="Interactive scaling projections for LOLM from 20.5M to 7B parameters. Explore predicted perplexity, gate dynamics, and training compute across model sizes.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #0a0a0b;
+            color: #e2e8f0;
+            font-family: 'Inter', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Nav */
+        .pnav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(10,10,11,0.92); backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .pnav-inner {
+            max-width: 960px; margin: 0 auto; display: flex;
+            align-items: center; justify-content: space-between;
+            height: 64px; padding: 0 24px;
+        }
+        .pnav-logo {
+            display: flex; align-items: center; gap: 10px; text-decoration: none;
+        }
+        .pnav-logo-icon {
+            width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+        }
+        .pnav-logo-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .pnav-logo-text {
+            font-size: 18px; font-weight: 700; color: #fff; letter-spacing: 0.08em;
+        }
+        .pnav-back {
+            color: #94a3b8; text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s;
+        }
+        .pnav-back:hover { color: #6366f1; }
+
+        /* Main */
+        .proj-container {
+            max-width: 960px; margin: 0 auto; padding: 104px 24px 60px;
+        }
+        .proj-title {
+            font-size: 28px; font-weight: 800; color: #fff; letter-spacing: -0.03em; margin-bottom: 6px;
+        }
+        .proj-desc {
+            color: #94a3b8; font-size: 14px; line-height: 1.5; margin-bottom: 8px;
+        }
+
+        /* Legend */
+        .proj-legend { display: flex; gap: 6px; align-items: center; margin-bottom: 20px; }
+        .proj-legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+        .proj-legend span { color: #94a3b8; font-size: 11px; }
+        .proj-legend span:not(:last-child) { margin-right: 8px; }
+
+        /* Tabs */
+        .proj-tabs { display: flex; gap: 4px; margin-bottom: 24px; flex-wrap: wrap; }
+        .proj-tab {
+            padding: 8px 16px; border-radius: 6px; border: 1px solid transparent;
+            cursor: pointer; font-size: 12px; font-weight: 600;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: rgba(255,255,255,0.04); color: #94a3b8; transition: all 0.2s;
+        }
+        .proj-tab:hover { background: rgba(255,255,255,0.08); color: #e2e8f0; }
+        .proj-tab.active { background: #6366f1; color: #fff; border-color: #6366f1; }
+
+        /* Panels */
+        .proj-panel { display: none; }
+        .proj-panel.active { display: block; }
+
+        .proj-section-title {
+            font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 4px;
+        }
+        .proj-section-desc {
+            color: #94a3b8; font-size: 12px; margin-bottom: 16px;
+        }
+
+        /* Chart area */
+        .proj-chart-wrap {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px; padding: 24px 20px;
+        }
+
+        /* Bar chart (CSS-only) */
+        .bar-chart { width: 100%; }
+        .bar-row {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+        }
+        .bar-label {
+            width: 60px; text-align: right; font-size: 12px; font-weight: 600;
+            color: #94a3b8; font-family: 'JetBrains Mono', monospace; flex-shrink: 0;
+        }
+        .bar-track {
+            flex: 1; height: 36px; background: rgba(255,255,255,0.02);
+            border-radius: 6px; position: relative; overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%; border-radius: 6px; transition: width 0.6s ease;
+            display: flex; align-items: center; justify-content: flex-end; padding-right: 10px;
+            font-size: 11px; font-weight: 700; color: #fff; min-width: 40px;
+        }
+        .bar-fill.actual { background: #6366f1; }
+        .bar-fill.projected { background: #f59e0b; opacity: 0.8; }
+        .bar-fill.danger { background: #ef4444; }
+        .bar-fill.danger-proj { background: #f59e0b; opacity: 0.8; }
+
+        /* Reference line */
+        .bar-ref {
+            position: absolute; top: 0; bottom: 0; width: 1px;
+            border-left: 2px dashed rgba(255,255,255,0.15); z-index: 2;
+        }
+        .bar-ref-label {
+            position: absolute; top: -18px; transform: translateX(-50%);
+            font-size: 9px; color: rgba(255,255,255,0.3); white-space: nowrap;
+        }
+
+        /* Note box */
+        .proj-note {
+            margin-top: 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px; padding: 16px;
+        }
+        .proj-note p {
+            font-size: 12px; color: #b0b8c8; line-height: 1.7; margin: 0;
+        }
+        .proj-note .hl-actual { color: #818cf8; font-weight: 600; }
+        .proj-note .hl-proj { color: #f59e0b; font-weight: 600; }
+        .proj-note .hl-danger { color: #ef4444; font-weight: 600; }
+        .proj-note .hl-good { color: #22c55e; font-weight: 600; }
+
+        /* Summary table */
+        .proj-table-wrap {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px; overflow-x: auto;
+        }
+        .proj-table {
+            width: 100%; border-collapse: collapse; font-size: 13px;
+        }
+        .proj-table thead tr { border-bottom: 2px solid rgba(255,255,255,0.08); }
+        .proj-table th {
+            padding: 14px 16px; text-align: center; font-weight: 600; color: #94a3b8;
+        }
+        .proj-table th:first-child { text-align: left; }
+        .proj-table th.c-actual { color: #818cf8; font-weight: 700; }
+        .proj-table th.c-proj { color: #f59e0b; font-weight: 700; }
+        .proj-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+        .proj-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+        .proj-table td { padding: 12px 16px; text-align: center; }
+        .proj-table td:first-child { text-align: left; font-weight: 600; color: #e2e8f0; }
+        .proj-table .v-a { color: #818cf8; }
+        .proj-table .v-p { color: #fbbf24; }
+
+        /* Stats grid */
+        .proj-stats { display: grid; gap: 8px; margin-top: 16px; }
+        .proj-stats-4 { grid-template-columns: repeat(4, 1fr); }
+        .proj-stats-3 { grid-template-columns: repeat(3, 1fr); }
+        .proj-stat-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px; padding: 14px; text-align: center;
+        }
+        .proj-stat-val { font-size: 18px; font-weight: 800; }
+        .proj-stat-label { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+        .proj-stat-type { font-size: 10px; margin-top: 3px; }
+
+        /* Footer */
+        .proj-footer {
+            margin-top: 32px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;
+        }
+        .proj-footer p { font-size: 11px; color: #64748b; line-height: 1.5; margin-bottom: 6px; }
+
+        @media (max-width: 640px) {
+            .proj-stats-4 { grid-template-columns: repeat(2, 1fr); }
+            .proj-stats-3 { grid-template-columns: 1fr; }
+            .proj-table th, .proj-table td { padding: 10px 8px; font-size: 11px; }
+            .bar-label { width: 48px; font-size: 10px; }
+            .proj-title { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="pnav">
+        <div class="pnav-inner">
+            <a href="index.html" class="pnav-logo">
+                <div class="pnav-logo-icon"><img src="qira_logo_full.png" alt="QIRA"></div>
+                <span class="pnav-logo-text">QIRA</span>
+            </a>
+            <a href="index.html#research" class="pnav-back">&larr; Back to Research</a>
+        </div>
+    </nav>
+
+    <div class="proj-container">
+        <h1 class="proj-title">LOLM Scaling Projections</h1>
+        <p class="proj-desc">Empirical results (20.5M-1.57B) and projected behavior (7B, 13B) based on observed scaling trends from the LOLM framework.</p>
+
+        <div class="proj-legend">
+            <span class="proj-legend-dot" style="background:#6366f1;"></span>
+            <span>Actual</span>
+            <span class="proj-legend-dot" style="background:#f59e0b;"></span>
+            <span>Projected</span>
+        </div>
+
+        <div class="proj-tabs" id="proj-tabs">
+            <button class="proj-tab active" data-tab="overview">Summary</button>
+            <button class="proj-tab" data-tab="gate">Gate Trajectory</button>
+            <button class="proj-tab" data-tab="latent">Latent %</button>
+            <button class="proj-tab" data-tab="dependency">Dependency Inversion</button>
+            <button class="proj-tab" data-tab="ppl">PPL Advantage</button>
+            <button class="proj-tab" data-tab="compute">Compute Efficiency</button>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="proj-panel active" id="panel-overview">
+            <div class="proj-table-wrap">
+                <table class="proj-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th class="c-actual">304M</th>
+                            <th class="c-actual">1.57B</th>
+                            <th class="c-proj">7B &#10230;</th>
+                            <th class="c-proj">13B &#10230;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Gate equilibrium</td><td class="v-a">0.83</td><td class="v-a">0.72</td><td class="v-p">0.60-0.65</td><td class="v-p">0.55-0.60</td></tr>
+                        <tr><td>Latent contribution</td><td class="v-a">17%</td><td class="v-a">29%</td><td class="v-p">35-40%</td><td class="v-p">40-45%</td></tr>
+                        <tr><td>Regimes alive</td><td class="v-a">32/32</td><td class="v-a">64/64</td><td class="v-p">128/128</td><td class="v-p">128/128</td></tr>
+                        <tr><td>Dependency inversion</td><td class="v-a">+744%</td><td class="v-a">14M&times;</td><td class="v-p">stronger</td><td class="v-p">stronger</td></tr>
+                        <tr><td>Compute efficiency</td><td class="v-a">&mdash;</td><td class="v-a">~2&times;</td><td class="v-p">&ge;2&times;</td><td class="v-p">&ge;2&times;</td></tr>
+                        <tr><td>PPL advantage</td><td class="v-a">&mdash;</td><td class="v-a">15%</td><td class="v-p">15-25%</td><td class="v-p">15-25%</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="proj-note">
+                <p><span class="hl-proj">All projected values are hypotheses to be tested.</span> The 7B and 13B columns represent expected behavior based on directional trends observed from 304M to 1.57B. TPU scale runs will confirm or refute these projections. Negative results are equally valuable.</p>
+            </div>
+        </div>
+
+        <!-- GATE TRAJECTORY -->
+        <div class="proj-panel" id="panel-gate">
+            <h2 class="proj-section-title">Gate Equilibrium Across Scale</h2>
+            <p class="proj-section-desc">Lower gate = more latent contribution. The model allocates increasingly to the SSM at larger scale.</p>
+            <div class="proj-chart-wrap">
+                <div class="bar-chart" id="chart-gate"></div>
+            </div>
+            <div class="proj-note">
+                <p>The initial rise from 0.27 &rarr; 0.83 (20.5M &rarr; 304M) reflects architecture maturing. Gradient isolation wasn't implemented until 304M. The meaningful trend starts at 304M: <span class="hl-actual">0.83 &rarr; 0.72</span> shows the model allocating more to latent at scale. Projected to continue: <span class="hl-proj">0.625 at 7B, 0.575 at 13B</span>. If the gate approaches 0.50, surface and latent become equal partners.</p>
+            </div>
+        </div>
+
+        <!-- LATENT % -->
+        <div class="proj-panel" id="panel-latent">
+            <h2 class="proj-section-title">Latent Contribution (%) Across Scale</h2>
+            <p class="proj-section-desc">How much of the fused representation comes from the SSM latent path. Rising = architecture becoming more hybrid.</p>
+            <div class="proj-chart-wrap">
+                <div class="bar-chart" id="chart-latent"></div>
+            </div>
+            <div class="proj-note">
+                <p>20.5M and 149M had high latent % due to immature training (no gradient isolation). From 304M onward the trend is clear: <span class="hl-actual">17% &rarr; 29%</span>. Projected: <span class="hl-proj">37.5% at 7B, 42.5% at 13B</span>. At 45%+ the architecture would be a genuine dual stream system rather than a Transformer with an auxiliary module.</p>
+            </div>
+        </div>
+
+        <!-- DEPENDENCY INVERSION -->
+        <div class="proj-panel" id="panel-dependency">
+            <h2 class="proj-section-title">Dependency Inversion Intensity (log scale)</h2>
+            <p class="proj-section-desc">PPL multiplier when latent path is removed (gate=1.0). Higher = deeper integration.</p>
+            <div class="proj-chart-wrap">
+                <div class="bar-chart" id="chart-dependency"></div>
+            </div>
+            <div class="proj-stats proj-stats-4">
+                <div class="proj-stat-card">
+                    <div class="proj-stat-val" style="color:#ef4444;">744&times;</div>
+                    <div class="proj-stat-label">304M</div>
+                    <div class="proj-stat-type" style="color:#64748b;">measured</div>
+                </div>
+                <div class="proj-stat-card">
+                    <div class="proj-stat-val" style="color:#ef4444;">14M&times;</div>
+                    <div class="proj-stat-label">1.57B</div>
+                    <div class="proj-stat-type" style="color:#64748b;">measured</div>
+                </div>
+                <div class="proj-stat-card">
+                    <div class="proj-stat-val" style="color:#f59e0b;">500M&times;</div>
+                    <div class="proj-stat-label">7B</div>
+                    <div class="proj-stat-type" style="color:#f59e0b;">projected</div>
+                </div>
+                <div class="proj-stat-card">
+                    <div class="proj-stat-val" style="color:#f59e0b;">5B&times;</div>
+                    <div class="proj-stat-label">13B</div>
+                    <div class="proj-stat-type" style="color:#f59e0b;">projected</div>
+                </div>
+            </div>
+            <div class="proj-note">
+                <p>The trend from 304M to 1.57B is superexponential on a log scale: <span class="hl-danger">2.87 &rarr; 7.15</span> (log&#8321;&#8320;). If this trajectory continues, 7B and 13B surface only collapse may produce effectively infinite perplexity. The model would output near random tokens. At that point, the dependency inversion is total: the Transformer is no longer a language model without the SSM.</p>
+            </div>
+        </div>
+
+        <!-- PPL ADVANTAGE -->
+        <div class="proj-panel" id="panel-ppl">
+            <h2 class="proj-section-title">PPL Advantage vs Matched Baseline</h2>
+            <p class="proj-section-desc">Percentage lower perplexity than decoder only baseline at matched compute.</p>
+            <div class="proj-chart-wrap">
+                <div class="bar-chart" id="chart-ppl"></div>
+            </div>
+            <div class="proj-stats proj-stats-3">
+                <div class="proj-stat-card">
+                    <div class="proj-stat-val" style="color:#6366f1; font-size:22px;">15%</div>
+                    <div class="proj-stat-label">1.57B (controlled)</div>
+                </div>
+                <div class="proj-stat-card">
+                    <div class="proj-stat-val" style="color:#f59e0b; font-size:22px;">15-25%</div>
+                    <div class="proj-stat-label">7B</div>
+                </div>
+                <div class="proj-stat-card">
+                    <div class="proj-stat-val" style="color:#f59e0b; font-size:22px;">15-25%</div>
+                    <div class="proj-stat-label">13B</div>
+                </div>
+            </div>
+            <div class="proj-note">
+                <p>This is the most uncertain projection. We only have one controlled data point (1.57B). The 15-25% range at 7B and 13B is conservative. It assumes the advantage holds but doesn't necessarily grow. <span class="hl-good">If it exceeds 25% at 7B, that's the strongest possible signal that the architecture's advantage compounds with scale.</span></p>
+            </div>
+        </div>
+
+        <!-- COMPUTE EFFICIENCY -->
+        <div class="proj-panel" id="panel-compute">
+            <h2 class="proj-section-title">Compute Efficiency vs Baseline</h2>
+            <p class="proj-section-desc">How many fewer training steps LOLM needs to reach baseline quality. 2&times; = half the compute.</p>
+            <div class="proj-chart-wrap">
+                <div class="bar-chart" id="chart-compute"></div>
+            </div>
+            <div class="proj-note">
+                <p>At 1.57B, LOLM at step 10K matches baseline at step 20K, achieving <span class="hl-actual">2&times; compute efficiency</span>. At 7B with more latent contribution (projected 35-40%), the SSM's inductive bias should provide an even stronger early advantage. Conservative projection: <span class="hl-proj">2-3&times; at 7B and 13B</span>. In dollar terms, a model that costs $10M to train conventionally could reach equivalent quality for $3.3-5M with LOLM's architecture.</p>
+            </div>
+        </div>
+
+        <div class="proj-footer">
+            <p>Indigo values are measured empirical results. Amber values are projections based on observed trends from 304M &rarr; 1.57B. All projections are hypotheses to be validated by TPU-scale experiments at 7B and 13B. Negative results will be reported with equal rigor.</p>
+            <p>Qira LLC, Leonard & Leonard, 2026</p>
+            <p style="margin-top:6px;">&copy; 2026 QIRA. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+    // Tab switching
+    document.getElementById('proj-tabs').addEventListener('click', function(e) {
+        const tab = e.target.closest('.proj-tab');
+        if (!tab) return;
+        document.querySelectorAll('.proj-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.proj-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    });
+
+    // Bar chart renderer
+    function renderBarChart(containerId, data, maxVal, refLine) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        let html = '';
+        data.forEach(d => {
+            const pct = (d.value / maxVal) * 100;
+            const cls = d.type === 'actual' ? 'actual' : d.type === 'danger' ? 'danger' : d.type === 'danger-proj' ? 'danger-proj' : 'projected';
+            html += `
+                <div class="bar-row">
+                    <div class="bar-label">${d.label}</div>
+                    <div class="bar-track">
+                        ${refLine ? `<div class="bar-ref" style="left:${(refLine.value/maxVal)*100}%"><span class="bar-ref-label">${refLine.label}</span></div>` : ''}
+                        <div class="bar-fill ${cls}" style="width:${Math.max(pct, 4)}%">${d.display}</div>
+                    </div>
+                </div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    // Gate data
+    renderBarChart('chart-gate', [
+        { label: '20.5M', value: 0.27, display: '0.27', type: 'actual' },
+        { label: '149M', value: 0.55, display: '0.55', type: 'actual' },
+        { label: '304M', value: 0.83, display: '0.83', type: 'actual' },
+        { label: '1.57B', value: 0.72, display: '0.72', type: 'actual' },
+        { label: '7B', value: 0.625, display: '0.625', type: 'projected' },
+        { label: '13B', value: 0.575, display: '0.575', type: 'projected' },
+    ], 1.0, { value: 0.5, label: '50/50 parity' });
+
+    // Latent contribution
+    renderBarChart('chart-latent', [
+        { label: '20.5M', value: 73, display: '73%', type: 'actual' },
+        { label: '149M', value: 45, display: '45%', type: 'actual' },
+        { label: '304M', value: 17, display: '17%', type: 'actual' },
+        { label: '1.57B', value: 29, display: '29%', type: 'actual' },
+        { label: '7B', value: 37.5, display: '37.5%', type: 'projected' },
+        { label: '13B', value: 42.5, display: '42.5%', type: 'projected' },
+    ], 80, { value: 50, label: 'Parity' });
+
+    // Dependency inversion (log scale)
+    renderBarChart('chart-dependency', [
+        { label: '304M', value: 2.87, display: '744×', type: 'danger' },
+        { label: '1.57B', value: 7.15, display: '14M×', type: 'danger' },
+        { label: '7B', value: 8.7, display: '500M×', type: 'danger-proj' },
+        { label: '13B', value: 9.7, display: '5B×', type: 'danger-proj' },
+    ], 11, null);
+
+    // PPL advantage
+    renderBarChart('chart-ppl', [
+        { label: '1.57B', value: 15, display: '15%', type: 'actual' },
+        { label: '7B', value: 20, display: '15-25%', type: 'projected' },
+        { label: '13B', value: 20, display: '15-25%', type: 'projected' },
+    ], 35, null);
+
+    // Compute efficiency
+    renderBarChart('chart-compute', [
+        { label: '1.57B', value: 2.0, display: '2.0×', type: 'actual' },
+        { label: '7B', value: 2.5, display: '2-3×', type: 'projected' },
+        { label: '13B', value: 2.5, display: '2-3×', type: 'projected' },
+    ], 4, { value: 1, label: 'Baseline' });
+    </script>
+</body>
+</html>

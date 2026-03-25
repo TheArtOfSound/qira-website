@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%236366f1'/><text x='16' y='22' text-anchor='middle' fill='white' font-family='Arial' font-size='18' font-weight='bold'>Q</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surface vs. Latent: Rethinking Language Representations | QIRA</title>
+    <meta name="description" content="The surface vs latent thesis in language modeling. How LOLM separates fast token prediction from slow discourse structure using a dual stream architecture.">
+    <meta property="og:title" content="Surface vs. Latent: Rethinking Language Representations | QIRA">
+    <meta property="og:description" content="The surface vs latent thesis in language modeling. How LOLM separates fast token prediction from slow discourse structure using a dual stream architecture.">
+    <meta property="og:image" content="qira_logo_full.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Surface vs. Latent: Rethinking Language Representations | QIRA">
+    <meta name="twitter:description" content="The surface vs latent thesis in language modeling. How LOLM separates fast token prediction from slow discourse structure using a dual stream architecture.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="article.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="scroll-progress" id="scroll-progress"></div>
+    <div class="cursor-glow" id="cursor-glow"></div>
+
+    <nav class="nav scrolled" id="nav">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo"><div class="nav-logo-icon"><img src="qira_logo_full.png" alt="QIRA"></div><span class="nav-logo-text">QIRA</span></a>
+            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#research">Research</a></li>
+                <li><a href="index.html#projects">Projects</a></li>
+                <li><a href="index.html#infrastructure">Infrastructure</a></li>
+                <li><a href="index.html#blog">Blog</a></li>
+                <li><a href="index.html#team">Team</a></li>
+                <li><a href="index.html#contact" class="nav-cta">Contact</a></li>
+            </ul>
+            <div class="nav-backdrop" id="nav-backdrop"></div>
+        </div>
+    </nav>
+
+    <header class="article-header">
+        <div class="container">
+            <a href="index.html#blog" class="article-back">&larr; Back to Blog</a>
+            <div class="article-meta-top">
+                <span class="article-tag">Representations</span>
+            </div>
+            <h1 class="article-title">Surface vs. Latent: Rethinking Language Representations</h1>
+            <p class="article-subtitle">An Introduction to Dual Stream Language Modeling and the Case for Explicit Latent Structure</p>
+            <div class="article-info">
+                <span class="article-authors">Bryan Leonard &amp; Brandyn Leonard</span>
+                <span class="article-separator">&middot;</span>
+                <span class="article-org">Qira LLC</span>
+                <span class="article-separator">&middot;</span>
+                <span class="article-date">2026</span>
+            </div>
+        </div>
+    </header>
+
+    <article class="article-body">
+        <div class="container article-container">
+
+            <div class="article-abstract">
+                <h2>Abstract</h2>
+                <p>Standard language models learn a single representation at each position that must simultaneously encode surface level token statistics and deep structural patterns. We propose that language has distinct observable and hidden structures that benefit from explicit separation in the model architecture. The observable layer (surface) captures token to token patterns, local syntax, and factual associations. The hidden layer (latent) captures discourse mode, topic continuity, rhetorical structure, and long range sequential dynamics. We describe how LOLM implements this separation through a Transformer surface decoder and a Mamba style latent SSM, and present evidence that this explicit decomposition enables the model to learn representations that neither component could develop alone. Most strikingly, we show that removing the latent stream (which contributes only 29% of the gate weight at 1.57B) causes complete model collapse, while removing the surface stream produces degraded but functional language modeling.</p>
+            </div>
+
+            <section class="article-section">
+                <h2><span class="section-num">1.</span> The Single Stream Assumption</h2>
+                <p>Every major language model architecture (GPT, LLaMA, Mistral, Pythia, OPT) uses a single hidden state vector at each position. This vector is the model's entire representation of the input at that point. It must encode everything: the syntactic role of the current token, its semantic content, the broader topic of the passage, the rhetorical intent of the author, the discourse structure that determines what comes next, and any factual associations relevant to the context.</p>
+                <p>This is a remarkable compression. A single 2048-dimensional vector (at the 1.5B scale) must represent information that varies on timescales from single tokens to hundreds of tokens. The model's only mechanism for managing these different timescales is the depth of its layer stack and the breadth of its attention heads.</p>
+                <p>We propose that this compression is unnecessarily lossy, and that explicitly separating fast changing surface representations from slow changing latent representations yields better models.</p>
+            </section>
+
+            <section class="article-section">
+                <h2><span class="section-num">2.</span> What the Surface Stream Captures</h2>
+                <p>The surface stream in LOLM is a standard prenorm Transformer decoder with RoPE positional encodings. It does what Transformers do best: attend to specific prior tokens, compute syntactic and semantic relationships through multi head attention, and build rich token level representations through deep feed forward transformations.</p>
+                <p>Surface representations are fast changing. They update significantly from token to token as the local context shifts. They excel at answering questions like: What is the grammatical structure of this sentence? What entity was mentioned three tokens ago? What word is most likely to continue this specific syntactic pattern? These are the core strengths of language modeling, and the Transformer handles them with well documented effectiveness.</p>
+            </section>
+
+            <section class="article-section">
+                <h2><span class="section-num">3.</span> What the Latent Stream Captures</h2>
+                <p>The latent stream in LOLM is a 4-layer (at 304M) or 6-layer (at 1.57B) selective state space model that takes the Transformer's hidden states as input and evolves a continuous latent representation z. Unlike the Transformer, the SSM maintains a recurrent state that evolves gradually, naturally smoothing over individual token variations and tracks slower changing patterns.</p>
+                <p>The CPC training objective provides direct evidence of what the latent stream learns. By training the SSM to predict future decoder states from current latent states, we can measure whether the latent representation contains meaningful information about what the Transformer will encounter next. At 304M, the CPC loss drops from 5.55 (random chance over 256 positions) to 0.15, indicating that the latent state encodes highly precise information about the future trajectory of the surface decoder. The SSM is not simply smoothing the Transformer's output; it is extracting predictive structure that the Transformer does not explicitly represent.</p>
+            </section>
+
+            <section class="article-section">
+                <h2><span class="section-num">4.</span> The Seasoning Effect: Why 30% Matters More Than 70%</h2>
+                <p>At convergence on the 1.57B model, the manifestation gate settles at approximately 0.72, meaning 72% of the fused representation comes from the surface decoder and 29% from the latent SSM. A naive interpretation would be that the surface decoder is doing the heavy lifting while the SSM provides a minor refinement.</p>
+                <p>The ablation data demolishes this interpretation. Removing the latent 29% (forcing gate to 1.0) causes perplexity to explode from 34.47 to 485 million, a 14 millionfold degradation. The surface decoder alone is not just worse; it has completely lost the ability to model language. Conversely, removing the surface 71% (forcing gate to 0.0) produces perplexity of 56,130. Bad, but still functioning as a recognizable language model.</p>
+                <p>We call this the <strong>seasoning effect</strong>, by analogy with cooking: salt is a tiny fraction of a dish's ingredients by weight, but removing it destroys the result. The latent SSM provides a structural signal that the surface decoder has learned to depend on absolutely. Without it, the Transformer's representations become incoherent: not slightly worse, but catastrophically nonfunctional.</p>
+            </section>
+
+            <section class="article-section">
+                <h2><span class="section-num">5.</span> Why Explicit Separation Works</h2>
+                <p>The key design principle is not simply &ldquo;add an SSM alongside a Transformer.&rdquo; It is the explicit separation of training objectives and gradient paths. The surface decoder is trained by token prediction loss. The latent SSM is trained by CPC loss. The regime layer is trained by changepoint and diversity losses. The memory is trained through chunked read write gradient bridging. Each component has its own learning signal, and gradient isolation prevents the dominant token loss from overwhelming the auxiliary objectives.</p>
+                <p>This separation is what enables the components to develop complementary representations rather than collapsing to redundancy. The SSM is not trying to minimize token prediction loss directly; it is trying to predict future decoder states. The regime layer is not trying to minimize perplexity; it is trying to identify coherent segments. Each component solves its own problem, and the fusion layer learns to combine their outputs in a way that serves the overall objective.</p>
+            </section>
+
+            <section class="article-section">
+                <h2><span class="section-num">6.</span> Implications for Language Model Design</h2>
+                <p>The surface latent decomposition suggests a broader design principle: language models may benefit from explicitly representing distinct types of structure through dedicated subsystems, rather than forcing a single representation to encode everything. The current single stream paradigm succeeds because Transformers are powerful enough to implicitly learn multiple timescales of representation within a single vector. But &ldquo;powerful enough&rdquo; is not the same as &ldquo;optimal.&rdquo;</p>
+                <p>The explicit separation in LOLM achieves 52% lower perplexity than Pythia-410M with 26% fewer parameters at 304M, and 15% lower perplexity than a controlled baseline at 1.57B. These gains come precisely from giving each type of structure its own pathway and its own training signal.</p>
+                <p>The most compelling evidence that this matters is the dependency inversion. If the surface decoder could implicitly capture everything the latent SSM captures, removing the SSM at inference time would cause only moderate degradation. Instead, it causes complete collapse. The latent stream is carrying information that the surface stream cannot reconstruct from its own representations. Explicit separation didn't just improve efficiency. It enabled the model to learn representations that were previously inaccessible.</p>
+            </section>
+
+            <section class="article-section">
+                <h2><span class="section-num">7.</span> Conclusion</h2>
+                <p>Language has structure at multiple timescales, from individual token statistics to document level discourse patterns. Standard language models compress all of this into a single representation stream. LOLM demonstrates that explicitly separating surface and latent representations, training them with dedicated objectives, and combining them through a learned gate produces models that are more efficient, more capable, and internally organized in ways that single stream models are not. The finding that the minority latent stream is more structurally essential than the majority surface stream challenges the assumption that language modeling is primarily a surface level prediction task. It suggests that the hidden structure of language (the patterns that persist below the level of individual tokens) may be more fundamental to model quality than we previously understood.</p>
+            </section>
+
+            <div class="article-footer-meta">
+                <p>Qira LLC, Leonard &amp; Leonard, 2026</p>
+                <a href="Qira_Surface_vs_Latent.pdf" class="btn btn-secondary" target="_blank">Download PDF</a>
+            </div>
+
+        </div>
+    </article>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <span class="footer-logo"><span class="nav-logo-icon" style="width:36px;height:36px;"><img src="qira_logo_full.png" alt="QIRA"></span><span class="nav-logo-text" style="font-size:16px;">QIRA</span></span>
+                    <p>Independent AI Research</p>
+                </div>
+                <div class="footer-links">
+                    <a href="index.html#about">About</a>
+                    <a href="index.html#research">Research</a>
+                    <a href="index.html#projects">Projects</a>
+                    <a href="index.html#blog">Blog</a>
+                    <a href="index.html#contact">Contact</a>
+                </div>
+                <div class="footer-copy">
+                    <p>&copy; 2026 QIRA. All rights reserved.</p>
+                    <p class="footer-supported">Supported by Google TPU Research Cloud</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <button class="back-to-top" id="back-to-top" aria-label="Back to top">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+    </button>
+
+    <script src="script.js"></script>
+</body>
+</html>
