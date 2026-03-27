@@ -136,7 +136,7 @@
                 <div class="current-content">
                     <p class="section-label">Current Work</p>
                     <h2>LOLM: Scaling to 1.57B parameters and beyond.</h2>
-                    <p>Our flagship framework, LOLM (Latent Order Language Model), separates surface token prediction from latent discourse modeling in a unified hybrid architecture. We've validated the approach across four scale points (20.5M, 149M, 304M, 1.57B) and are actively working to push to 7B+ parameters on TPU infrastructure.</p>
+                    <p>Our flagship framework, LOLM (Latent Order Language Model), separates surface token prediction from latent discourse modeling in a unified hybrid architecture. Validated across four scale points (20.5M, 149M, 304M, 1.57B) on NVIDIA H200 and Google Cloud TPU. Cross-hardware experiments confirm 7.6&ndash;15% perplexity improvement over matched baselines. The 7B FULL LOLM run is actively training on TPU v6e with distributed SPMD sharding. U.S. Patent Application #64/002,166 filed March 2026.</p>
                     <div class="hero-actions" style="margin-top: 1.5rem;">
                         <a href="projections.html" class="btn btn-primary">View Scaling Projections</a>
                         <a href="#contact" class="btn btn-secondary">Support This Research</a>
@@ -245,7 +245,7 @@
                     <div class="publication-details">
                         <h4>LOLM: Language Modeling Beyond the Surface with Hybrid Transformer-SSM Latent Order Fields</h4>
                         <p class="publication-authors">Bryan Leonard &amp; Brandyn Leonard, Qira LLC</p>
-                        <p class="publication-desc">Introduces a hybrid architecture that augments a Transformer decoder with four parallel subsystems (selective SSM, persistent memory, regime layer, manifestation gate), achieving 52.2% lower perplexity than Pythia-410M at matched compute and 15% improvement over a controlled baseline at 1.57B.</p>
+                        <p class="publication-desc">Introduces a hybrid architecture that augments a Transformer decoder with four parallel subsystems (selective SSM, persistent memory, regime layer, manifestation gate), achieving 52.2% lower perplexity than Pythia-410M at matched compute, 15% improvement over a controlled baseline at 1.57B, and 7.6% improvement on TPU under identical conditions. Gate ablation reveals a 14,000,000x dependency inversion. Validated across 3 datasets (FineWeb-Edu, C4, Pile) and 2 hardware platforms (NVIDIA H200, Google TPU v4/v6e). U.S. Patent Pending (#64/002,166).</p>
                         <div class="publication-links">
                             <span>Code &amp; Weights Available</span>
                             <a href="architecture.html" style="color: #818cf8; text-decoration: none; font-weight: 500; font-size: 0.85rem; transition: color 0.2s;">Interactive Architecture Diagram &rarr;</a>
@@ -267,7 +267,7 @@
                 <div class="project-card">
                     <div class="project-status">Active</div>
                     <h3>LOLM Model Family</h3>
-                    <p>Training and evaluating hybrid Transformer SSM language models across scales from 20.5M to 1.57B parameters. At 304M, LOLM achieves 52.2% lower perplexity than Pythia-410M at matched compute. At 1.57B, a 15% improvement over a controlled decoder only baseline.</p>
+                    <p>Training and evaluating hybrid Transformer SSM language models across scales from 20.5M to 7B parameters. At 304M, LOLM achieves 52.2% lower perplexity than Pythia-410M. At 1.57B on H200, 15% improvement over a matched baseline. On TPU, 7.6% improvement with full architecture under identical conditions. 7B actively training on TPU v6e with SPMD sharding.</p>
                     <div class="project-meta">
                         <span>Hybrid Architecture</span>
                         <span>Scaling</span>
@@ -320,7 +320,7 @@
                 <div class="infra-content">
                     <p class="section-label">Compute & Infrastructure</p>
                     <h2>Research at meaningful scale.</h2>
-                    <p>All LOLM models through 1.57B were trained on a single NVIDIA H200 GPU (140GB). Scaling to 7B+ parameters requires distributed compute. QIRA is supported by the Google TPU Research Cloud, providing TPU v5e pod slices for the controlled 7B comparison and downstream benchmarks that will complete the evidence package.</p>
+                    <p>All LOLM models through 1.57B were trained on a single NVIDIA H200 GPU (140GB), achieving 15% lower perplexity than a matched decoder-only baseline. Cross-hardware validation on Google Cloud TPU v4/v6e confirmed a 7.6% advantage under controlled conditions. The 7B FULL LOLM run is actively training on TPU v6e-8 with SPMD sharding. QIRA holds U.S. Provisional Patent Application #64/002,166 (filed March 10, 2026) covering the hybrid architecture.</p>
                     <div class="supported-by">
                         <span class="supported-by-label">Supported by</span>
                         <div class="supported-by-logo">
@@ -336,7 +336,7 @@
                         </div>
                         <div>
                             <h4>Single GPU to TPU Scaling</h4>
-                            <p>All models through 1.57B trained on a single NVIDIA H200. Next phase: TPU v5e-16 pod slices for 7B controlled comparisons and full benchmark suites (MMLU, HellaSwag, ARC, LAMBADA, WinoGrande, PIQA).</p>
+                            <p>All models through 1.57B trained on a single NVIDIA H200 (140GB). Cross-hardware validation completed on Google Cloud TPU v4-8/v6e. 7B FULL LOLM actively training on TPU v6e with SPMD FSDPv2 sharding across 16 chips. Downstream benchmarks (HellaSwag, WikiText-103, LAMBADA) completed on both platforms.</p>
                         </div>
                     </div>
                     <div class="infra-item">
@@ -354,7 +354,7 @@
                         </div>
                         <div>
                             <h4>Scaling Pipeline</h4>
-                            <p>Automated infrastructure for training the same architecture at multiple scales (20.5M, 149M, 304M, 1.57B) with consistent evaluation across all checkpoints.</p>
+                            <p>Automated infrastructure for training at multiple scales (20.5M, 149M, 304M, 1.57B, 7B) with consistent evaluation. Three datasets (FineWeb-Edu, C4, Pile), downstream benchmarks (HellaSwag, WikiText-103, LAMBADA), and full ablation suites across every checkpoint.</p>
                         </div>
                     </div>
                 </div>
@@ -502,8 +502,8 @@
                     <a href="#contact">Contact</a>
                 </div>
                 <div class="footer-copy">
-                    <p>&copy; 2026 QIRA. All rights reserved.</p>
-                    <p class="footer-supported">Supported by Google TPU Research Cloud</p>
+                    <p>&copy; 2026 QIRA. All rights reserved. U.S. Patent Pending #64/002,166.</p>
+                    <p class="footer-supported">Supported by Google TPU Research Cloud | Trained on NVIDIA H200</p>
                 </div>
             </div>
         </div>
